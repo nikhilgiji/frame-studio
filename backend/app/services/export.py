@@ -15,6 +15,8 @@ from app.models.project import Project
 from app.models.review import FrameLabel, Label
 from app.models.video import Video
 from app.schemas.export import ExportCreate
+from app.schemas.frame import FrameQuery
+from app.services.frame import frame_filter_clauses
 from app.services.project import ProjectService
 
 
@@ -86,7 +88,14 @@ def run_export(job_id: int, database_url: str) -> None:
         try:
             statement = select(Frame).where(Frame.project_id == job.project_id)
             if config.export_mode == "selected":
-                statement = statement.where(Frame.id.in_(config.frame_ids))
+                if config.all_filtered:
+                    statement = statement.where(
+                        *frame_filter_clauses(
+                            job.project_id, FrameQuery.model_validate(config.filters)
+                        )
+                    )
+                else:
+                    statement = statement.where(Frame.id.in_(config.frame_ids))
             elif config.export_mode == "favorites":
                 statement = statement.where(Frame.favorite.is_(True))
             elif config.export_mode == "reviewed":

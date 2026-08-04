@@ -36,6 +36,11 @@ class Frame(Base):
     __tablename__ = "frames"
     __table_args__ = (
         Index("ix_frames_project_video_number", "project_id", "video_id", "frame_number"),
+        Index("ix_frames_project_favorite_id", "project_id", "favorite", "id"),
+        Index("ix_frames_project_rejected_id", "project_id", "rejected", "id"),
+        Index("ix_frames_project_review_id", "project_id", "review_status", "id"),
+        Index("ix_frames_video_timestamp", "video_id", "timestamp_seconds", "id"),
+        Index("ix_frames_project_reviewed_at", "project_id", "reviewed_at"),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(

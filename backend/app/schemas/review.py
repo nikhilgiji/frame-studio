@@ -73,6 +73,30 @@ class BulkReviewUpdate(ReviewUpdate):
     frame_ids: list[int] = Field(min_length=1, max_length=10000)
 
 
+class FilteredTarget(BaseModel):
+    frame_ids: list[int] = Field(default=[], max_length=10000)
+    all_filtered: bool = False
+    filters: dict[str, object] = {}
+
+
+class FilteredLabelUpdate(FilteredTarget):
+    label_ids: list[int] = Field(min_length=1, max_length=1000)
+    action: str = "assign"
+
+
+class FilteredReviewUpdate(FilteredTarget, ReviewUpdate):
+    pass
+
+
+class BulkActionResult(BaseModel):
+    affected_count: int
+
+
+class BulkActionEnvelope(BaseModel):
+    data: BulkActionResult
+    error: None = None
+
+
 class ReviewSessionUpdate(BaseModel):
     video_id: int | None = None
     last_frame_id: int | None = None

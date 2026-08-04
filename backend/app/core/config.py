@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./vision_curator.db"
     storage_root: Path = Path("../storage")
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    concurrent_job_limit: int = 2
 
     model_config = SettingsConfigDict(
         env_file=(BACKEND_DIR.parent / ".env", BACKEND_DIR / ".env"),

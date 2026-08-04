@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { ErrorState } from "../components/ErrorState";
 import { LoadingState } from "../components/LoadingState";
 import { ProjectForm } from "../components/ProjectForm";
+import { useToast } from "../components/toastContext";
 import {
   createProject,
   deleteProject,
@@ -22,6 +23,7 @@ function date(value: string) {
 
 export function ProjectsPage() {
   const queryClient = useQueryClient();
+  const { notify } = useToast();
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
   const projects = useQuery({
@@ -34,6 +36,7 @@ export function ProjectsPage() {
     mutationFn: createProject,
     onSuccess: () => {
       setShowCreate(false);
+      notify("Project created");
       void refresh();
     },
   });
@@ -42,12 +45,16 @@ export function ProjectsPage() {
       updateProject(id, input),
     onSuccess: () => {
       setEditing(null);
+      notify("Project updated");
       void refresh();
     },
   });
   const remove = useMutation({
     mutationFn: deleteProject,
-    onSuccess: () => void refresh(),
+    onSuccess: () => {
+      notify("Project record deleted", "info");
+      void refresh();
+    },
   });
 
   function confirmDelete(project: Project) {

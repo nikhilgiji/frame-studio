@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
+from app.core.errors import AppError
 from app.database.session import get_db
-from app.schemas.frame import FrameEnvelope, FramePage, FrameQuery
+from app.schemas.frame import FrameEnvelope, FramePage, FrameQuery, VideoTimelineEnvelope
 from app.services.frame import FrameService
 
 router = APIRouter(tags=["frames"])
@@ -22,6 +23,27 @@ def list_frames(
     query: Annotated[FrameQuery, Query()],
 ) -> FramePage:
     return frames.list(project_id, query)
+
+
+@router.get("/videos/{video_id}/timeline", response_model=VideoTimelineEnvelope)
+def video_timeline(
+    video_id: int,
+    frames: Annotated[FrameService, Depends(service)],
+    marker_limit: Annotated[int, Query(ge=3, le=300)] = 120,
+) -> VideoTimelineEnvelope:
+    return VideoTimelineEnvelope(data=frames.timeline(video_id, marker_limit))
+
+
+@router.get("/videos/{video_id}/frames/nearest", response_model=FrameEnvelope)
+def nearest_frame(
+    video_id: int,
+    frames: Annotated[FrameService, Depends(service)],
+    timestamp: Annotated[float | None, Query(ge=0)] = None,
+    frame_number: Annotated[int | None, Query(ge=0)] = None,
+) -> FrameEnvelope:
+    if timestamp is None and frame_number is None:
+        raise AppError("NAVIGATION_TARGET_REQUIRED", "Provide a timestamp or frame number.", 422)
+    return FrameEnvelope(data=frames.nearest(video_id, timestamp, frame_number))
 
 
 @router.get("/frames/{frame_id}", response_model=FrameEnvelope)

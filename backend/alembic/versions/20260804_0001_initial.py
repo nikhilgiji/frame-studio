@@ -17,4 +17,3 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Return to an unversioned database."""
-

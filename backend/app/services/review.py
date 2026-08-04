@@ -15,6 +15,7 @@ from app.schemas.review import (
     ReviewSessionUpdate,
     ReviewUpdate,
 )
+from app.services.history import ActionHistoryService
 
 
 class LabelService:
@@ -104,21 +105,41 @@ class ReviewService:
 
     def labels(self, frame_id: int, label_ids: list[int]) -> Frame:
         frame = self._frame(frame_id)
+        history = ActionHistoryService(self.session)
+        before = history.snapshot([frame_id])
         valid = self._valid_labels(frame.project_id, label_ids)
         for label_id in valid:
             if not self.session.get(FrameLabel, (frame_id, label_id)):
                 self.session.add(FrameLabel(frame_id=frame_id, label_id=label_id))
         self.session.commit()
+        names = list(self.session.scalars(select(Label.name).where(Label.id.in_(valid))))
+        history.record(
+            frame.project_id,
+            "label_assignment",
+            f"Assigned {', '.join(names)} to 1 frame",
+            before,
+            history.snapshot([frame_id]),
+        )
         return frame
 
     def remove_label(self, frame_id: int, label_id: int) -> Frame:
         frame = self._frame(frame_id)
+        history = ActionHistoryService(self.session)
+        before = history.snapshot([frame_id])
+        label = self.session.get(Label, label_id)
         self.session.execute(
             delete(FrameLabel).where(
                 FrameLabel.frame_id == frame_id, FrameLabel.label_id == label_id
             )
         )
         self.session.commit()
+        history.record(
+            frame.project_id,
+            "label_removal",
+            f'Removed "{label.name if label else label_id}" from 1 frame',
+            before,
+            history.snapshot([frame_id]),
+        )
         return frame
 
     def bulk_labels(self, frame_ids: list[int], label_ids: list[int], action: str) -> None:
@@ -129,6 +150,8 @@ class ReviewService:
         if len(project_ids) != 1:
             raise AppError("PROJECT_MISMATCH", "Bulk actions must remain within one project.", 409)
         valid = self._valid_labels(next(iter(project_ids)), label_ids)
+        history = ActionHistoryService(self.session)
+        before = history.snapshot(frame_ids)
         if action == "remove":
             self.session.execute(
                 delete(FrameLabel).where(
@@ -150,19 +173,72 @@ class ReviewService:
                 if (frame_id, label_id) not in existing
             )
         self.session.commit()
+        names = list(self.session.scalars(select(Label.name).where(Label.id.in_(valid))))
+        verb = "Removed" if action == "remove" else "Assigned"
+        direction = "from" if action == "remove" else "to"
+        history.record(
+            next(iter(project_ids)),
+            f"label_{action}",
+            f"{verb} {', '.join(names)} {direction} {len(frame_ids)} frames",
+            before,
+            history.snapshot(frame_ids),
+        )
 
     def review(self, frame_id: int, payload: ReviewUpdate) -> Frame:
         frame = self._frame(frame_id)
+        history = ActionHistoryService(self.session)
+        before = history.snapshot([frame_id])
         self._apply_review(frame, payload)
         self.session.commit()
         self.session.refresh(frame)
+        history.record(
+            frame.project_id,
+            "review_change",
+            "Updated review state for 1 frame",
+            before,
+            history.snapshot([frame_id]),
+        )
         return frame
 
     def bulk_review(self, frame_ids: list[int], payload: ReviewUpdate) -> None:
         frames = list(self.session.scalars(select(Frame).where(Frame.id.in_(frame_ids))))
+        if not frames:
+            raise AppError("EMPTY_SELECTION", "No frames match this batch action.", 409)
+        history = ActionHistoryService(self.session)
+        before = history.snapshot(frame_ids)
         for frame in frames:
             self._apply_review(frame, payload)
         self.session.commit()
+        history.record(
+            frames[0].project_id,
+            "bulk_review",
+            f"Updated review state for {len(frames)} frames",
+            before,
+            history.snapshot(frame_ids),
+        )
+
+    def resolve_target(
+        self,
+        project_id: int,
+        frame_ids: list[int],
+        all_filtered: bool,
+        filters: dict[str, object],
+        storage_root,
+    ) -> list[int]:
+        if all_filtered:
+            from app.services.frame import FrameService
+
+            ids = FrameService(self.session, storage_root).matching_ids(project_id, filters)
+        else:
+            ids = frame_ids
+        if not ids:
+            raise AppError("EMPTY_SELECTION", "No frames match this batch action.", 409)
+        count = self.session.scalar(
+            select(func.count(Frame.id)).where(Frame.project_id == project_id, Frame.id.in_(ids))
+        )
+        if count != len(set(ids)):
+            raise AppError("PROJECT_MISMATCH", "The selection contains invalid frames.", 409)
+        return list(dict.fromkeys(ids))
 
     def _apply_review(self, frame: Frame, payload: ReviewUpdate) -> None:
         for key, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():

@@ -1,7 +1,16 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 export function Layout({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    const apply = () => {
+      document.documentElement.dataset.theme =
+        localStorage.getItem("vision-curator:theme") ?? "dark";
+    };
+    apply();
+    window.addEventListener("vision-curator:theme", apply);
+    return () => window.removeEventListener("vision-curator:theme", apply);
+  }, []);
   return (
     <div className="app-shell">
       <header>
@@ -14,6 +23,8 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
         <nav>
           <Link to="/projects">Projects</Link>
+          {" · "}
+          <Link to="/settings">Settings</Link>
         </nav>
       </header>
       {children}

@@ -40,8 +40,8 @@ test("virtualizes gallery cards and navigates the full-resolution viewer", async
           items,
           page: 1,
           page_size: 200,
-          total: 3,
-          has_next: false,
+          total: 100000,
+          has_next: true,
         }),
         { status: 200 },
       );
@@ -70,7 +70,8 @@ test("virtualizes gallery cards and navigates the full-resolution viewer", async
   });
   window.history.pushState({}, "", "/projects/1/gallery");
   render(<App />);
-  expect(await screen.findByText("3 frames")).toBeInTheDocument();
+  expect(await screen.findByText("100,000 frames")).toBeInTheDocument();
+  expect(screen.getAllByRole("img")).toHaveLength(3);
   const first = await screen.findByRole("img", { name: "Frame 0" });
   await user.dblClick(first.closest("button")!);
   expect(screen.getByRole("dialog", { name: "Frame 0" })).toBeInTheDocument();

@@ -63,6 +63,21 @@ def test_extraction_job_writes_readable_frames_and_prevents_duplicates(
     page = client.get(f"/api/v1/projects/{video['project_id']}/frames?page=1&page_size=2").json()
     assert page["total"] == 3 and len(page["items"]) == 2 and page["has_next"] is True
     assert [item["frame_number"] for item in page["items"]] == [0, 4]
+    thumbnail_job = client.post(f"/api/v1/projects/{video['project_id']}/thumbnail-jobs")
+    assert thumbnail_job.status_code == 202
+    history = client.get(f"/api/v1/projects/{video['project_id']}/jobs").json()["data"]
+    assert any(job["kind"] == "thumbnail" and job["status"] == "completed" for job in history)
+    timeline = client.get(f"/api/v1/videos/{video['id']}/timeline?marker_limit=3").json()["data"]
+    assert timeline["extracted_count"] == 3
+    assert [marker["frame_number"] for marker in timeline["markers"]] == [0, 4, 8]
+    nearest = client.get(
+        f"/api/v1/videos/{video['id']}/frames/nearest", params={"timestamp": 0.7}
+    ).json()["data"]
+    assert nearest["frame_number"] == 4
+    nearest_number = client.get(
+        f"/api/v1/videos/{video['id']}/frames/nearest", params={"frame_number": 7}
+    ).json()["data"]
+    assert nearest_number["frame_number"] == 8
 
     duplicate = client.post(f"/api/v1/videos/{video['id']}/extraction-jobs", json=payload)
     assert duplicate.status_code == 409
@@ -85,6 +100,27 @@ def test_extraction_job_writes_readable_frames_and_prevents_duplicates(
     seconds_final = client.get(f"/api/v1/extraction-jobs/{seconds_job['id']}").json()["data"]
     assert seconds_final["status"] == "completed"
     assert seconds_final["processed_frames"] == 2
+
+    current_frames = client.get(f"/api/v1/projects/{video['project_id']}/frames").json()["items"]
+    missing_image = Path(str(video["stored_path"])).parent.parent / "frames" / str(video["id"])
+    first_image = next(missing_image.glob("*.jpg"))
+    first_image.unlink()
+    second_thumbnail = (
+        Path(str(video["stored_path"])).parent.parent
+        / "thumbnails"
+        / str(video["id"])
+        / f"{current_frames[1]['id']}.jpg"
+    )
+    second_thumbnail.unlink(missing_ok=True)
+    stored_video = Path(str(video["stored_path"]))
+    stored_video.rename(stored_video.with_suffix(".moved"))
+    report = client.post(
+        f"/api/v1/projects/{video['project_id']}/integrity-check",
+        json={"repair_thumbnails": True},
+    ).json()["data"]
+    codes = {issue["code"] for issue in report["issues"]}
+    assert {"VIDEO_MISSING", "FRAME_MISSING", "THUMBNAIL_MISSING"} <= codes
+    assert report["repaired_count"] >= 1 and second_thumbnail.is_file()
 
 
 def test_pending_extraction_can_be_cancelled(

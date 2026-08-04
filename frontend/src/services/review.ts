@@ -71,6 +71,40 @@ export const bulkReview = (frameIds: number[], changes: ReviewChanges) =>
     method: "POST",
     body: JSON.stringify({ frame_ids: frameIds, ...changes }),
   });
+export interface BatchTarget {
+  frame_ids: number[];
+  all_filtered: boolean;
+  filters: Record<string, string | string[]>;
+}
+export const filteredBulkLabels = (
+  projectId: number,
+  target: BatchTarget,
+  labelIds: number[],
+  action: "assign" | "remove",
+) =>
+  apiRequest<{ affected_count: number }>(
+    `/projects/${projectId}/frames/bulk-label`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        ...target,
+        label_ids: labelIds,
+        action,
+      }),
+    },
+  );
+export const filteredBulkReview = (
+  projectId: number,
+  target: BatchTarget,
+  changes: ReviewChanges,
+) =>
+  apiRequest<{ affected_count: number }>(
+    `/projects/${projectId}/frames/bulk-review`,
+    {
+      method: "POST",
+      body: JSON.stringify({ ...target, ...changes }),
+    },
+  );
 export const getSession = async (projectId: number, signal?: AbortSignal) =>
   (
     await apiRequest<{ data: ReviewSession }>(

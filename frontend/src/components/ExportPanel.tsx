@@ -11,15 +11,19 @@ import {
 export function ExportPanel({
   projectId,
   selectedIds = [],
+  allFiltered = false,
+  filters = {},
 }: {
   projectId: number;
   selectedIds?: number[];
+  allFiltered?: boolean;
+  filters?: Record<string, string | string[]>;
 }) {
   const [open, setOpen] = useState(false);
   const [jobId, setJobId] = useState<number | null>(null);
   const [name, setName] = useState("dataset");
   const [mode, setMode] = useState<ExportInput["export_mode"]>(
-    selectedIds.length ? "selected" : "favorites",
+    selectedIds.length || allFiltered ? "selected" : "favorites",
   );
   const [multi, setMulti] =
     useState<ExportInput["multi_label_mode"]>("copy_each");
@@ -56,6 +60,8 @@ export function ExportPanel({
               destination_name: name,
               export_mode: mode,
               frame_ids: selectedIds,
+              all_filtered: allFiltered,
+              filters,
               label_ids: [],
               multi_label_mode: multi,
               conflict,
@@ -67,7 +73,7 @@ export function ExportPanel({
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              pattern="[A-Za-z0-9._ -]+"
+              pattern="[A-Za-z0-9._ \\-]+"
               required
             />
           </label>

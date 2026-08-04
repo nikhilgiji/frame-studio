@@ -3,6 +3,7 @@ import { useEffect, useState, type WheelEvent } from "react";
 import { imageUrl } from "../services/frames";
 import type { ReviewChanges } from "../services/review";
 import type { Frame } from "../types/frame";
+import { normalizedKey, useShortcuts } from "../services/shortcuts";
 
 interface Props {
   frames: Frame[];
@@ -22,6 +23,7 @@ export function FrameViewer({
   const [zoom, setZoom] = useState(1);
   const [original, setOriginal] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const shortcuts = useShortcuts();
   const frame = frames[index];
   useEffect(() => {
     function key(event: KeyboardEvent) {
@@ -30,16 +32,23 @@ export function FrameViewer({
         event.target instanceof HTMLTextAreaElement
       )
         return;
-      if (["ArrowLeft", "a", "A"].includes(event.key))
+      const pressed = normalizedKey(event.key);
+      if (
+        [shortcuts.previous, shortcuts.previousAlt]
+          .map(normalizedKey)
+          .includes(pressed)
+      )
         onIndex(Math.max(0, index - 1));
-      if (["ArrowRight", "d", "D"].includes(event.key))
+      if (
+        [shortcuts.next, shortcuts.nextAlt].map(normalizedKey).includes(pressed)
+      )
         onIndex(Math.min(frames.length - 1, index + 1));
-      if (event.key === "Escape") onClose();
-      if (event.key.toLowerCase() === "f")
+      if (pressed === normalizedKey(shortcuts.closeViewer)) onClose();
+      if (pressed === normalizedKey(shortcuts.favorite))
         onReview(frame, { favorite: !frame.favorite });
-      if (event.key.toLowerCase() === "r")
+      if (pressed === normalizedKey(shortcuts.reject))
         onReview(frame, { rejected: !frame.rejected });
-      if (event.key === " ") {
+      if (pressed === normalizedKey(shortcuts.reviewed)) {
         event.preventDefault();
         onReview(frame, {
           review_status:
@@ -49,7 +58,7 @@ export function FrameViewer({
     }
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [frame, frames.length, index, onClose, onIndex, onReview]);
+  }, [frame, frames.length, index, onClose, onIndex, onReview, shortcuts]);
   useEffect(() => {
     setZoom(1);
     setOriginal(false);

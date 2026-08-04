@@ -36,6 +36,28 @@ class FramePage(BaseModel):
     has_next: bool
 
 
+class TimelineMarker(BaseModel):
+    frame_id: int
+    frame_number: int
+    timestamp_seconds: float
+    thumbnail_url: str
+    labeled: bool
+    rejected: bool
+
+
+class VideoTimeline(BaseModel):
+    video_id: int
+    duration_seconds: float
+    frame_count: int
+    extracted_count: int
+    markers: list[TimelineMarker]
+
+
+class VideoTimelineEnvelope(BaseModel):
+    data: VideoTimeline
+    error: None = None
+
+
 class FrameQuery(BaseModel):
     video_id: int | None = None
     page: int = Field(default=1, ge=1)

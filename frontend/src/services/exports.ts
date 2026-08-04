@@ -6,6 +6,8 @@ export interface ExportInput {
   export_mode:
     "label_folders" | "selected" | "favorites" | "reviewed" | "manifest";
   frame_ids: number[];
+  all_filtered?: boolean;
+  filters?: Record<string, string | string[]>;
   label_ids: number[];
   multi_label_mode: "copy_each" | "manifest_only";
   conflict: "skip" | "overwrite" | "rename";

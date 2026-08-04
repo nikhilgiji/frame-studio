@@ -6,8 +6,12 @@ from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.schemas.frame import FrameEnvelope
 from app.schemas.review import (
+    BulkActionEnvelope,
+    BulkActionResult,
     BulkLabelUpdate,
     BulkReviewUpdate,
+    FilteredLabelUpdate,
+    FilteredReviewUpdate,
     FrameLabelsUpdate,
     LabelCreate,
     LabelEnvelope,
@@ -108,6 +112,47 @@ def bulk_review(payload: BulkReviewUpdate, session: Annotated[Session, Depends(d
         payload.frame_ids, ReviewUpdate(**payload.model_dump(exclude={"frame_ids"}))
     )
     return Response(status_code=204)
+
+
+@router.post("/projects/{project_id}/frames/bulk-label", response_model=BulkActionEnvelope)
+def filtered_bulk_label(
+    project_id: int,
+    payload: FilteredLabelUpdate,
+    request: Request,
+    session: Annotated[Session, Depends(db)],
+) -> BulkActionEnvelope:
+    service = ReviewService(session)
+    ids = service.resolve_target(
+        project_id,
+        payload.frame_ids,
+        payload.all_filtered,
+        payload.filters,
+        request.app.state.settings.storage_root,
+    )
+    service.bulk_labels(ids, payload.label_ids, payload.action)
+    return BulkActionEnvelope(data=BulkActionResult(affected_count=len(ids)))
+
+
+@router.post("/projects/{project_id}/frames/bulk-review", response_model=BulkActionEnvelope)
+def filtered_bulk_review(
+    project_id: int,
+    payload: FilteredReviewUpdate,
+    request: Request,
+    session: Annotated[Session, Depends(db)],
+) -> BulkActionEnvelope:
+    service = ReviewService(session)
+    ids = service.resolve_target(
+        project_id,
+        payload.frame_ids,
+        payload.all_filtered,
+        payload.filters,
+        request.app.state.settings.storage_root,
+    )
+    service.bulk_review(
+        ids,
+        ReviewUpdate(**payload.model_dump(exclude={"frame_ids", "all_filtered", "filters"})),
+    )
+    return BulkActionEnvelope(data=BulkActionResult(affected_count=len(ids)))
 
 
 @router.get("/projects/{project_id}/review-session", response_model=ReviewSessionEnvelope)

@@ -4,16 +4,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useHistory, useLocation, useParams } from "react-router-dom";
 
 import { ErrorState } from "../components/ErrorState";
+import { ActionHistoryPanel } from "../components/ActionHistoryPanel";
 import { ExportPanel } from "../components/ExportPanel";
 import { FrameViewer } from "../components/FrameViewer";
 import { LoadingState } from "../components/LoadingState";
+import { ReviewQueuePanel } from "../components/ReviewQueuePanel";
+import { ShortcutHelp } from "../components/ShortcutHelp";
+import { VideoTimeline } from "../components/VideoTimeline";
 import { listFrames, thumbnailUrl } from "../services/frames";
 import { listVideos } from "../services/videos";
 import {
   assignLabels,
   bulkLabels,
-  bulkReview,
   createLabel,
+  filteredBulkLabels,
+  filteredBulkReview,
   getSession,
   listLabels,
   reviewFrame,
@@ -21,6 +26,8 @@ import {
   type ReviewChanges,
 } from "../services/review";
 import type { Frame } from "../types/frame";
+import { normalizedKey, useShortcuts } from "../services/shortcuts";
+import { redoAction, undoAction } from "../services/history";
 
 export function GalleryPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -35,11 +42,15 @@ export function GalleryPage() {
   const [page, setPage] = useState(Number(filters.get("page") ?? 1));
   const [size, setSize] = useState(180);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [allFiltered, setAllFiltered] = useState(false);
   const [anchor, setAnchor] = useState<number | null>(null);
   const [viewer, setViewer] = useState<number | null>(null);
+  const [timelineFrame, setTimelineFrame] = useState<Frame | null>(null);
   const [newLabel, setNewLabel] = useState("");
   const [shortcut, setShortcut] = useState("");
   const [undo, setUndo] = useState<null | (() => Promise<unknown>)>(null);
+  const [showHelp, setShowHelp] = useState(false);
+  const shortcuts = useShortcuts();
   const scroll = useRef<HTMLDivElement>(null);
   const restored = useRef(false);
   const resumedFrame = useRef(false);
@@ -159,7 +170,29 @@ export function GalleryPage() {
       const label = labels.data?.find(
         (item) => item.shortcut?.toLowerCase() === event.key.toLowerCase(),
       );
-      if (label) void applyLabel(label.id);
+      if (label) {
+        void applyLabel(label.id);
+        return;
+      }
+      const pressed = normalizedKey(event.key);
+      if (pressed === normalizedKey(shortcuts.selectVisible)) {
+        setAllFiltered(false);
+        setSelected(new Set(items.map((frame) => frame.id)));
+      }
+      if (pressed === normalizedKey(shortcuts.clearSelection)) {
+        setAllFiltered(false);
+        setSelected(new Set());
+      }
+      if (pressed === normalizedKey(shortcuts.openSelected)) {
+        const index = items.findIndex((frame) => selected.has(frame.id));
+        if (index >= 0) setViewer(index);
+      }
+      if (pressed === normalizedKey(shortcuts.undo)) {
+        void undoAction(id).then(refresh);
+      }
+      if (pressed === normalizedKey(shortcuts.redo)) {
+        void redoAction(id).then(refresh);
+      }
     }
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
@@ -170,6 +203,8 @@ export function GalleryPage() {
     else next.delete(name);
     next.delete("page");
     setPage(1);
+    setAllFiltered(false);
+    setSelected(new Set());
     history.replace({ search: next.toString() });
   }
   function toggleLabelFilter(labelId: number, checked: boolean) {
@@ -181,7 +216,28 @@ export function GalleryPage() {
     values.forEach((value) => next.append("label_ids", value));
     if (checked) next.append("label_ids", String(labelId));
     setPage(1);
+    setAllFiltered(false);
+    setSelected(new Set());
     history.replace({ search: next.toString() });
+  }
+  const filterObject = Object.fromEntries(
+    [...new Set(filters.keys())].map((key) => {
+      const values = filters.getAll(key);
+      return [key, values.length > 1 ? values : values[0]];
+    }),
+  );
+  const batchTarget = {
+    frame_ids: [...selected],
+    all_filtered: allFiltered,
+    filters: filterObject,
+  };
+  const affectedCount = allFiltered ? (frames.data?.total ?? 0) : selected.size;
+  function confirmBatch(action: string) {
+    return (
+      affectedCount > 0 &&
+      (affectedCount < 100 ||
+        window.confirm(`${action} ${affectedCount.toLocaleString()} frames?`))
+    );
   }
   if (frames.isLoading)
     return (
@@ -293,10 +349,70 @@ export function GalleryPage() {
             onChange={(e) => setSize(Number(e.target.value))}
           />
         </label>
-        <span>{selected.size} selected</span>
+        <span>{affectedCount.toLocaleString()} selected</span>
+        <button onClick={() => setShowHelp(true)}>Shortcut help</button>
       </div>
+      {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
+      <ReviewQueuePanel
+        projectId={id}
+        filters={filterObject}
+        onOpen={(frame) => {
+          const index = items.findIndex((item) => item.id === frame.id);
+          if (index >= 0) {
+            setTimelineFrame(null);
+            setViewer(index);
+          } else {
+            setViewer(null);
+            setTimelineFrame(frame);
+          }
+        }}
+      />
+      <ActionHistoryPanel projectId={id} />
       <aside className="label-bar">
-        <ExportPanel projectId={id} selectedIds={[...selected]} />
+        <ExportPanel
+          projectId={id}
+          selectedIds={[...selected]}
+          allFiltered={allFiltered}
+          filters={filterObject}
+        />
+        <button
+          onClick={() => {
+            setAllFiltered(false);
+            setSelected(new Set(items.map((frame) => frame.id)));
+          }}
+        >
+          Select visible
+        </button>
+        <button
+          onClick={() => {
+            setAllFiltered(true);
+            setSelected(new Set());
+          }}
+        >
+          Select all {frames.data?.total.toLocaleString()} filtered
+        </button>
+        <button
+          onClick={() => {
+            setAllFiltered(false);
+            setSelected(
+              new Set(
+                items
+                  .filter((frame) => !selected.has(frame.id))
+                  .map((frame) => frame.id),
+              ),
+            );
+          }}
+        >
+          Invert visible
+        </button>
+        <button
+          onClick={() => {
+            setAllFiltered(false);
+            setSelected(new Set());
+          }}
+        >
+          Clear selection
+        </button>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -341,17 +457,35 @@ export function GalleryPage() {
             </label>
             <button
               style={{ borderColor: label.color }}
-              onClick={() => void applyLabel(label.id)}
+              onClick={() => {
+                if (!confirmBatch(`Assign ${label.name} to`)) return;
+                void filteredBulkLabels(
+                  id,
+                  batchTarget,
+                  [label.id],
+                  "assign",
+                ).then(refresh);
+                setUndo(
+                  () => async () =>
+                    filteredBulkLabels(id, batchTarget, [label.id], "remove"),
+                );
+              }}
             >
               Assign{label.shortcut && <kbd>{label.shortcut}</kbd>}
             </button>
             <button
-              disabled={!selected.size}
+              disabled={!affectedCount}
               onClick={() => {
-                const ids = [...selected];
-                void bulkLabels(ids, [label.id], "remove").then(refresh);
+                if (!confirmBatch(`Remove ${label.name} from`)) return;
+                void filteredBulkLabels(
+                  id,
+                  batchTarget,
+                  [label.id],
+                  "remove",
+                ).then(refresh);
                 setUndo(
-                  () => async () => bulkLabels(ids, [label.id], "assign"),
+                  () => async () =>
+                    filteredBulkLabels(id, batchTarget, [label.id], "assign"),
                 );
               }}
             >
@@ -360,17 +494,43 @@ export function GalleryPage() {
           </span>
         ))}
         <button
-          disabled={!selected.size}
+          disabled={!affectedCount}
           onClick={() => {
-            const ids = [...selected];
-            void bulkReview(ids, { review_status: "reviewed" }).then(refresh);
+            if (!confirmBatch("Mark reviewed")) return;
+            void filteredBulkReview(id, batchTarget, {
+              review_status: "reviewed",
+            }).then(refresh);
             setUndo(
               () => async () =>
-                bulkReview(ids, { review_status: "unreviewed" }),
+                filteredBulkReview(id, batchTarget, {
+                  review_status: "unreviewed",
+                }),
             );
           }}
         >
           Mark reviewed
+        </button>
+        <button
+          disabled={!affectedCount}
+          onClick={() => {
+            if (confirmBatch("Mark rejected"))
+              void filteredBulkReview(id, batchTarget, { rejected: true }).then(
+                refresh,
+              );
+          }}
+        >
+          Mark rejected
+        </button>
+        <button
+          disabled={!affectedCount}
+          onClick={() => {
+            if (confirmBatch("Mark favorite"))
+              void filteredBulkReview(id, batchTarget, { favorite: true }).then(
+                refresh,
+              );
+          }}
+        >
+          Mark favorite
         </button>
         <button
           disabled={!undo}
@@ -382,6 +542,28 @@ export function GalleryPage() {
           Undo
         </button>
       </aside>
+      {filters.get("video_id") && (
+        <VideoTimeline
+          videoId={Number(filters.get("video_id"))}
+          current={
+            timelineFrame ?? (viewer !== null ? items[viewer] : undefined)
+          }
+          onOpen={(frame) => {
+            const index = items.findIndex((item) => item.id === frame.id);
+            if (index >= 0) {
+              setTimelineFrame(null);
+              setViewer(index);
+            } else {
+              setViewer(null);
+              setTimelineFrame(frame);
+            }
+            void saveSession(id, {
+              video_id: frame.video_id,
+              last_frame_id: frame.id,
+            });
+          }}
+        />
+      )}
       {!items.length ? (
         <div className="empty-state">
           <h3>No matching frames</h3>
@@ -451,12 +633,18 @@ export function GalleryPage() {
           Next page
         </button>
       </div>
-      {viewer !== null && (
+      {(viewer !== null || timelineFrame) && (
         <FrameViewer
-          frames={items}
-          index={viewer}
-          onIndex={setViewer}
-          onClose={() => setViewer(null)}
+          frames={timelineFrame ? [timelineFrame] : items}
+          index={timelineFrame ? 0 : viewer!}
+          onIndex={(index) => {
+            setTimelineFrame(null);
+            setViewer(index);
+          }}
+          onClose={() => {
+            setTimelineFrame(null);
+            setViewer(null);
+          }}
           onReview={(frame, changes) => void actReview(frame, changes)}
         />
       )}

@@ -4,7 +4,7 @@ from pathlib import Path
 from time import perf_counter
 
 from fastapi.testclient import TestClient
-from sqlalchemy import insert
+from sqlalchemy import insert, text
 from sqlalchemy.orm import Session, sessionmaker
 
 import app.models  # noqa: F401
@@ -17,7 +17,7 @@ from app.models.project import Project
 from app.models.video import Video
 
 
-def test_40000_frame_gallery_query_is_bounded_and_indexed(tmp_path: Path) -> None:
+def test_100000_frame_gallery_query_is_bounded_and_indexed(tmp_path: Path) -> None:
     database_path = tmp_path / "performance.db"
     storage = tmp_path / "storage"
     engine = create_database_engine(f"sqlite:///{database_path}")
@@ -37,8 +37,8 @@ def test_40000_frame_gallery_query_is_bounded_and_indexed(tmp_path: Path) -> Non
                 content_hash="a" * 64,
                 file_size=1,
                 fps=25,
-                duration_seconds=1600,
-                frame_count=40000,
+                duration_seconds=4000,
+                frame_count=100000,
                 width=640,
                 height=480,
                 codec="test",
@@ -46,7 +46,7 @@ def test_40000_frame_gallery_query_is_bounded_and_indexed(tmp_path: Path) -> Non
             )
         ).inserted_primary_key[0]
         batch_size = 2000
-        for start in range(0, 40000, batch_size):
+        for start in range(0, 100000, batch_size):
             connection.execute(
                 insert(Frame),
                 [
@@ -82,7 +82,19 @@ def test_40000_frame_gallery_query_is_bounded_and_indexed(tmp_path: Path) -> Non
         elapsed = perf_counter() - started
     data = response.json()
     assert response.status_code == 200
-    assert data["total"] == 4000 and len(data["items"]) == 100
+    assert data["total"] == 10000 and len(data["items"]) == 100
     assert elapsed < 1.0
-    assert database_path.stat().st_size < 30_000_000
+    assert database_path.stat().st_size < 75_000_000
+    with engine.connect() as connection:
+        plan = " ".join(
+            str(row)
+            for row in connection.execute(
+                text(
+                    "EXPLAIN QUERY PLAN SELECT id FROM frames "
+                    "WHERE project_id = :project AND favorite = 1 ORDER BY id LIMIT 100"
+                ),
+                {"project": project_id},
+            )
+        )
+    assert "ix_frames_project_favorite_id" in plan
     engine.dispose()

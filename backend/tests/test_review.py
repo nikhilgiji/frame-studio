@@ -66,6 +66,71 @@ def test_labels_bulk_review_filters_and_session_persist(client: TestClient, tmp_
         params={"label_ids": labels[2]["id"], "review_status": "reviewed", "favorite": True},
     ).json()
     assert filtered["total"] == len(frame_ids)
+    filtered_label = client.post(
+        f"/api/v1/projects/{project_id}/frames/bulk-label",
+        json={
+            "all_filtered": True,
+            "filters": {"favorite": True},
+            "label_ids": [labels[3]["id"]],
+            "action": "assign",
+        },
+    )
+    assert filtered_label.json()["data"]["affected_count"] == len(frame_ids)
+    filtered_reject = client.post(
+        f"/api/v1/projects/{project_id}/frames/bulk-review",
+        json={
+            "all_filtered": True,
+            "filters": {"label_ids": [labels[3]["id"]]},
+            "rejected": True,
+        },
+    )
+    assert filtered_reject.json()["data"]["affected_count"] == len(frame_ids)
+    queue = client.post(
+        f"/api/v1/projects/{project_id}/review-queues",
+        json={
+            "name": "Favorite review",
+            "queue_type": "filtered",
+            "filters": {"favorite": True},
+        },
+    ).json()["data"]
+    assert queue["total"] == len(frame_ids) and queue["reviewed"] == len(frame_ids)
+    resumed = client.patch(f"/api/v1/review-queues/{queue['id']}", json={"position": 3}).json()[
+        "data"
+    ]
+    assert resumed["position"] == 3 and resumed["current_frame_id"] == frame_ids[3]
+    client.delete(f"/api/v1/frames/{frame_id}/labels/{labels[1]['id']}")
+    stable = client.get(f"/api/v1/review-queues/{queue['id']}").json()["data"]
+    assert stable["total"] == len(frame_ids) and stable["position"] == 3
+    statistics = client.get(f"/api/v1/projects/{project_id}/statistics").json()["data"]
+    assert statistics["total_frames"] == len(frame_ids)
+    assert statistics["reviewed_frames"] == len(frame_ids)
+    assert statistics["favorite_frames"] == len(frame_ids)
+    assert statistics["rejected_frames"] == len(frame_ids)
+    assert sum(row["count"] for row in statistics["frames_per_video"]) == len(frame_ids)
+    assert statistics["extraction_jobs"] >= 1
+    client.post(
+        f"/api/v1/projects/{project_id}/frames/bulk-review",
+        json={
+            "all_filtered": True,
+            "filters": {"favorite": True},
+            "favorite": False,
+        },
+    )
+    actions = client.get(f"/api/v1/projects/{project_id}/action-history").json()["data"]
+    assert actions[0]["description"] == f"Updated review state for {len(frame_ids)} frames"
+    undone = client.post(f"/api/v1/projects/{project_id}/action-history/undo")
+    assert undone.json()["data"]["status"] == "undone"
+    assert client.get(f"/api/v1/projects/{project_id}/frames", params={"favorite": True}).json()[
+        "total"
+    ] == len(frame_ids)
+    redone = client.post(f"/api/v1/projects/{project_id}/action-history/redo")
+    assert redone.json()["data"]["status"] == "applied"
+    assert (
+        client.get(f"/api/v1/projects/{project_id}/frames", params={"favorite": True}).json()[
+            "total"
+        ]
+        == 0
+    )
     searched = client.get(
         f"/api/v1/projects/{project_id}/frames", params={"search": "extract.avi"}
     ).json()

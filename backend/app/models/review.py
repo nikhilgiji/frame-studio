@@ -50,3 +50,32 @@ class ReviewSession(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class ReviewQueue(Base):
+    __tablename__ = "review_queues"
+    __table_args__ = (Index("ix_review_queues_project_updated", "project_id", "updated_at"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    queue_type: Mapped[str] = mapped_column(String(40), nullable=False, default="filtered")
+    filters_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    frame_ids_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class ActionHistory(Base):
+    __tablename__ = "action_history"
+    __table_args__ = (Index("ix_action_history_project_created", "project_id", "created_at"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    action_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    description: Mapped[str] = mapped_column(String(300), nullable=False)
+    before_json: Mapped[str] = mapped_column(Text, nullable=False)
+    after_json: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="applied")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

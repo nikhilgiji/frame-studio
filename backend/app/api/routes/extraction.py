@@ -11,6 +11,7 @@ from app.schemas.extraction import (
     ExtractionRead,
 )
 from app.services.extraction import ExtractionService, run_extraction
+from app.services.jobs import enforce_job_limit
 
 router = APIRouter(tags=["extraction"])
 
@@ -29,6 +30,7 @@ def create_job(
     request: Request,
     jobs: Annotated[ExtractionService, Depends(service)],
 ) -> ExtractionEnvelope:
+    enforce_job_limit(jobs.session, request.app.state.settings.concurrent_job_limit)
     job = jobs.create(video_id, payload)
     background.add_task(run_extraction, job.id, request.app.state.settings.database_url)
     return ExtractionEnvelope(data=ExtractionRead.model_validate(job))

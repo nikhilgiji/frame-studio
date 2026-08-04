@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { importVideos } from "../services/videos";
+import { useToast } from "./toastContext";
 import type { VideoImportResult } from "../types/video";
 
 interface FolderInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -16,6 +17,7 @@ interface FolderInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export function VideoImport({ projectId }: { projectId: number }) {
   const queryClient = useQueryClient();
+  const { notify } = useToast();
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<VideoImportResult | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -27,6 +29,10 @@ export function VideoImport({ projectId }: { projectId: number }) {
       setFiles([]);
       if (fileInput.current) fileInput.current.value = "";
       void queryClient.invalidateQueries({ queryKey: ["videos", projectId] });
+      notify(
+        `${data.imported.length} video${data.imported.length === 1 ? "" : "s"} imported`,
+        data.errors.length ? "info" : "success",
+      );
     },
   });
 
@@ -36,10 +42,21 @@ export function VideoImport({ projectId }: { projectId: number }) {
   }
 
   return (
-    <section className="video-import">
+    <section
+      className="video-import"
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault();
+        setFiles(Array.from(event.dataTransfer.files));
+        setResult(null);
+      }}
+      aria-label="Video import drop zone"
+    >
       <div>
         <h3>Import videos</h3>
-        <p>Files are copied into this project for portability.</p>
+        <p>
+          Files are copied into this project. Choose them or drag and drop here.
+        </p>
       </div>
       <div className="import-controls">
         <label className="file-button">

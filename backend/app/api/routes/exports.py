@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.schemas.export import ExportCreate, ExportEnvelope, ExportRead
 from app.services.export import ExportService, run_export
+from app.services.jobs import enforce_job_limit
 
 router = APIRouter(tags=["exports"])
 
@@ -22,6 +23,7 @@ def create_export(
     request: Request,
     exports: Annotated[ExportService, Depends(service)],
 ) -> ExportEnvelope:
+    enforce_job_limit(exports.session, request.app.state.settings.concurrent_job_limit)
     job = exports.create(project_id, payload)
     background.add_task(run_export, job.id, request.app.state.settings.database_url)
     return ExportEnvelope(data=ExportRead.model_validate(job))

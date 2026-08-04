@@ -6,6 +6,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 backend/vision_curator.db
+vision_curator.db
 storage/
 frontend/node_modules/
 frontend/dist/

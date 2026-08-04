@@ -4,7 +4,10 @@ import { Link, useParams } from "react-router-dom";
 
 import { ErrorState } from "../components/ErrorState";
 import { LoadingState } from "../components/LoadingState";
+import { StatisticsDashboard } from "../components/StatisticsDashboard";
 import { LabelManager } from "../components/LabelManager";
+import { JobHistory } from "../components/JobHistory";
+import { IntegrityPanel } from "../components/IntegrityPanel";
 import { ExportPanel } from "../components/ExportPanel";
 import { VideoImport } from "../components/VideoImport";
 import { VideoList } from "../components/VideoList";
@@ -21,6 +24,25 @@ export function ProjectDetailPage() {
     queryFn: ({ signal }) => getProject(id, signal),
     enabled: Number.isInteger(id),
   });
+  useEffect(() => {
+    if (!project.data) return;
+    const key = "vision-curator:recent-projects";
+    let recent: { id: number; name: string }[] = [];
+    try {
+      recent = JSON.parse(localStorage.getItem(key) ?? "[]");
+    } catch {
+      recent = [];
+    }
+    localStorage.setItem(
+      key,
+      JSON.stringify(
+        [
+          { id: project.data.id, name: project.data.name },
+          ...recent.filter((item) => item.id !== project.data?.id),
+        ].slice(0, 5),
+      ),
+    );
+  }, [project.data]);
 
   if (project.isLoading)
     return (
@@ -48,6 +70,9 @@ export function ProjectDetailPage() {
       {project.data && (
         <>
           <ExportPanel projectId={project.data.id} />
+          <StatisticsDashboard projectId={project.data.id} />
+          <JobHistory projectId={project.data.id} />
+          <IntegrityPanel projectId={project.data.id} />
           <LabelManager projectId={project.data.id} />
           <VideoImport projectId={project.data.id} />
           <VideoList projectId={project.data.id} />

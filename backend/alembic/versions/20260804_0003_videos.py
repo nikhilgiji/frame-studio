@@ -5,8 +5,9 @@ Revises: 20260804_0002
 Create Date: 2026-08-04
 """
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 revision = "20260804_0003"
 down_revision = "20260804_0002"
@@ -18,7 +19,12 @@ def upgrade() -> None:
     op.create_table(
         "videos",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("project_id", sa.Integer(), sa.ForeignKey("projects.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "project_id",
+            sa.Integer(),
+            sa.ForeignKey("projects.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("filename", sa.String(512), nullable=False),
         sa.Column("source_path", sa.String(2048), nullable=False),
         sa.Column("stored_path", sa.String(2048), nullable=False, unique=True),
@@ -31,7 +37,9 @@ def upgrade() -> None:
         sa.Column("height", sa.Integer(), nullable=False),
         sa.Column("codec", sa.String(32), nullable=False),
         sa.Column("status", sa.String(32), nullable=False, server_default="ready"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
         sa.UniqueConstraint("project_id", "content_hash", name="uq_videos_project_hash"),
     )
     op.create_index("ix_videos_project_status", "videos", ["project_id", "status"])
