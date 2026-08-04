@@ -1,0 +1,1 @@
+"""Vision Curator backend package."""
