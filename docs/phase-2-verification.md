@@ -12,6 +12,10 @@ The updated interface passed all 9 frontend unit tests, ESLint, Prettier, TypeSc
 
 Final acceptance remains pending until the owner rechecks the redesigned dashboard and completes the remaining workflow items in [phase-2-feedback.md](phase-2-feedback.md).
 
+On 2026-08-18, the dashboard was simplified further: the decorative hero was replaced by a compact project header, workspace tabs were reduced to direct labels, fixed metric and utility columns became fluid grids, and duplicate mobile rules were removed. A new Chromium test exercises every project tab at 1280×800, 820×900, and 390×844 and asserts that the document has no horizontal overflow. The test initially exposed overflow in the compact header and label form at 390 px; both defects were fixed and the responsive check then passed.
+
+The local project database showed 415 extracted frames and 0 reviewed frames. Therefore, the 100-frame keyboard-review acceptance item remains open even though all other owner workflow items were completed.
+
 ## Gate status
 
 All implementation and automated requirements pass. The Phase 2 release gate remains **pending external validation** because `tasks.md` requires at least one teammate to complete a real review workflow and provide feedback. The `phase-2-complete` tag must not be created until that feedback is recorded.

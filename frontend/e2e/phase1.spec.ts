@@ -100,3 +100,47 @@ test("Phase 2 settings persist and remain responsive", async ({ page }) => {
   await expect(page.getByLabel("Dark mode")).not.toBeChecked();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 });
+
+test("project dashboard adapts without horizontal overflow", async ({
+  page,
+}) => {
+  const projectName = `Responsive ${Date.now()}`;
+  await page.goto("/projects");
+  await page.getByRole("button", { name: "New project" }).click();
+  await page.getByLabel("Project name").fill(projectName);
+  await page.getByRole("button", { name: "Create project" }).click();
+  await page.getByRole("link", { name: projectName }).click();
+
+  for (const viewport of [
+    { width: 1280, height: 800 },
+    { width: 820, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const tab of ["Overview", "Labels", "Videos"]) {
+      await page.getByRole("button", { name: tab, exact: true }).click();
+      await expect(
+        page.getByRole("button", { name: tab, exact: true }),
+      ).toHaveAttribute("aria-current", "page");
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        overflowing: [...document.querySelectorAll("body *")]
+          .filter(
+            (element) =>
+              element.getBoundingClientRect().right > window.innerWidth + 1,
+          )
+          .slice(0, 5)
+          .map((element) => ({
+            className: (element as HTMLElement).className,
+            tag: element.tagName,
+            text: element.textContent?.trim().slice(0, 60),
+          })),
+      }));
+      expect(
+        layout.scrollWidth,
+        `${viewport.width}px ${tab}: ${JSON.stringify(layout.overflowing)}`,
+      ).toBeLessThanOrEqual(layout.clientWidth);
+    }
+  }
+});

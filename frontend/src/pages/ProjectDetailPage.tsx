@@ -61,12 +61,11 @@ export function ProjectDetailPage() {
     );
   return (
     <main className="project-detail">
+      <Link to="/projects" className="back-link project-back-link">
+        <span aria-hidden="true">←</span> All projects
+      </Link>
       <section className="project-hero">
         <div className="project-hero-copy">
-          <Link to="/projects" className="back-link">
-            <span aria-hidden="true">←</span> All projects
-          </Link>
-          <p className="eyebrow">Active project</p>
           <h2>{project.data?.name}</h2>
           <p className="project-description">
             {project.data?.description || "No project description yet."}
@@ -84,11 +83,11 @@ export function ProjectDetailPage() {
           <nav className="workspace-tabs" aria-label="Project workspace">
             {(
               [
-                ["overview", "Overview", "Progress and project health"],
-                ["labels", "Labels", "Organize your review vocabulary"],
-                ["videos", "Videos", "Import and extract source media"],
+                ["overview", "Overview"],
+                ["labels", "Labels"],
+                ["videos", "Videos"],
               ] as const
-            ).map(([panel, label, description]) => (
+            ).map(([panel, label]) => (
               <button
                 key={panel}
                 type="button"
@@ -96,8 +95,7 @@ export function ProjectDetailPage() {
                 aria-current={activePanel === panel ? "page" : undefined}
                 onClick={() => setActivePanel(panel)}
               >
-                <span>{label}</span>
-                <small>{description}</small>
+                {label}
               </button>
             ))}
           </nav>
@@ -108,10 +106,7 @@ export function ProjectDetailPage() {
               aria-labelledby="overview-heading"
             >
               <div className="section-heading">
-                <div>
-                  <p className="section-kicker">Overview</p>
-                  <h3 id="overview-heading">Project health</h3>
-                </div>
+                <h3 id="overview-heading">Project overview</h3>
                 <p>
                   Track review progress, background work, and file integrity.
                 </p>
@@ -130,10 +125,7 @@ export function ProjectDetailPage() {
               aria-labelledby="organize-heading"
             >
               <div className="section-heading">
-                <div>
-                  <p className="section-kicker">Organize</p>
-                  <h3 id="organize-heading">Labels</h3>
-                </div>
+                <h3 id="organize-heading">Labels</h3>
                 <p>Create a clear vocabulary before reviewing frames.</p>
               </div>
               <LabelManager projectId={project.data.id} />
@@ -146,10 +138,7 @@ export function ProjectDetailPage() {
               aria-labelledby="sources-heading"
             >
               <div className="section-heading">
-                <div>
-                  <p className="section-kicker">Sources</p>
-                  <h3 id="sources-heading">Videos</h3>
-                </div>
+                <h3 id="sources-heading">Videos</h3>
                 <p>Import source media and control frame extraction.</p>
               </div>
               <VideoImport projectId={project.data.id} />
