@@ -647,6 +647,101 @@ h2 {
 .dashboard-section .video-import {
   margin: 0;
 }
+.review-workflow {
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.review-workflow > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 0 14px;
+}
+.review-workflow h3,
+.review-workflow p {
+  margin: 0;
+}
+.review-workflow .eyebrow {
+  margin-bottom: 5px;
+}
+.workflow-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.workflow-steps li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--muted);
+  background: var(--surface-1);
+}
+.workflow-steps li > span {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+}
+.workflow-steps li div {
+  display: grid;
+  min-width: 0;
+}
+.workflow-steps li strong {
+  color: var(--text);
+}
+.workflow-steps li small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workflow-steps li.done > span {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #07130f;
+}
+.workflow-steps li.current {
+  border-color: var(--accent);
+}
+.workflow-steps li button,
+.workflow-steps li a {
+  grid-column: 1 / -1;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+.review-instructions {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) minmax(100px, 220px) auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--surface-1);
+}
+.review-instructions p {
+  color: var(--muted);
+  font-size: 13px;
+}
+.review-instructions progress {
+  width: 100%;
+}
 .dashboard-utility-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
@@ -1161,6 +1256,85 @@ h2 {
 .gallery-page {
   display: block;
 }
+.gallery-heading {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 10px;
+}
+.gallery-heading > div {
+  flex: 1;
+}
+.gallery-heading p,
+.gallery-heading h2 {
+  margin: 0;
+}
+.gallery-heading h2 {
+  margin-top: 3px;
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.1;
+}
+.gallery-heading a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.review-mode {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(120px, 180px) auto;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-2) 90%, var(--accent));
+}
+.review-mode h3,
+.review-mode p {
+  margin: 0;
+}
+.review-mode h3 {
+  margin-bottom: 4px;
+  font-size: 17px;
+}
+.review-mode p {
+  color: var(--muted);
+  font-size: 13px;
+}
+.review-mode-progress {
+  display: grid;
+  gap: 5px;
+}
+.review-mode-progress progress {
+  width: 100%;
+}
+.start-review {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #07130f;
+}
+.gallery-tools,
+.bulk-tools {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-1);
+}
+.gallery-tools > summary,
+.bulk-tools > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 700;
+}
+.gallery-tools .gallery-bar,
+.bulk-tools .label-bar {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-width: 1px 0 0;
+  border-radius: 0;
+  background: transparent;
+}
 .gallery-bar {
   display: flex;
   align-items: center;
@@ -1327,6 +1501,25 @@ h2 {
   .project-hero-actions > * {
     width: 100%;
     min-width: 0;
+  }
+  .review-workflow > header,
+  .review-instructions {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+  .review-workflow > header {
+    flex-direction: column;
+  }
+  .review-workflow > header .button-link {
+    width: 100%;
+  }
+  .review-mode {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .gallery-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
   .dashboard-section {
     padding: 18px;

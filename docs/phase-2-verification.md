@@ -16,6 +16,8 @@ On 2026-08-18, the dashboard was simplified further: the decorative hero was rep
 
 The local project database showed 415 extracted frames and 0 reviewed frames. Therefore, the 100-frame keyboard-review acceptance item remains open even though all other owner workflow items were completed.
 
+After the owner clarified that they did not know how to review frames, the dashboard and gallery were changed from feature-oriented screens to a guided workflow. The Overview panel now derives the next action from project statistics, displays Import → Extract → Review → Export progress, links directly to unreviewed frames, explains the `Space` and `Right Arrow` review loop, and shows progress toward 100 reviewed frames. The gallery presents the same one-frame-at-a-time instructions and a **Start with first unreviewed frame** action; advanced filters and batch controls are collapsed until requested. The start action persists its frame as the resume point. All 9 frontend unit tests, static/build checks, and 3 Chromium workflows pass through the guided path.
+
 ## Gate status
 
 All implementation and automated requirements pass. The Phase 2 release gate remains **pending external validation** because `tasks.md` requires at least one teammate to complete a real review workflow and provide feedback. The `phase-2-complete` tag must not be created until that feedback is recorded.

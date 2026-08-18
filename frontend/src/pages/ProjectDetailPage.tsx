@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { ErrorState } from "../components/ErrorState";
 import { LoadingState } from "../components/LoadingState";
+import { ReviewWorkflow } from "../components/ReviewWorkflow";
 import { StatisticsDashboard } from "../components/StatisticsDashboard";
 import { LabelManager } from "../components/LabelManager";
 import { JobHistory } from "../components/JobHistory";
@@ -105,6 +106,10 @@ export function ProjectDetailPage() {
               className="dashboard-section"
               aria-labelledby="overview-heading"
             >
+              <ReviewWorkflow
+                projectId={project.data.id}
+                onOpenVideos={() => setActivePanel("videos")}
+              />
               <div className="section-heading">
                 <h3 id="overview-heading">Project overview</h3>
                 <p>

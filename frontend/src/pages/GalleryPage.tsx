@@ -12,6 +12,7 @@ import { ReviewQueuePanel } from "../components/ReviewQueuePanel";
 import { ShortcutHelp } from "../components/ShortcutHelp";
 import { VideoTimeline } from "../components/VideoTimeline";
 import { listFrames, thumbnailUrl } from "../services/frames";
+import { getStatistics } from "../services/statistics";
 import { listVideos } from "../services/videos";
 import {
   assignLabels,
@@ -65,6 +66,10 @@ export function GalleryPage() {
   const videos = useQuery({
     queryKey: ["videos", id],
     queryFn: ({ signal }) => listVideos(id, signal),
+  });
+  const statistics = useQuery({
+    queryKey: ["statistics", id, {}],
+    queryFn: ({ signal }) => getStatistics(id, {}, signal),
   });
   const session = useQuery({
     queryKey: ["session", id],
@@ -120,7 +125,11 @@ export function GalleryPage() {
     initialRect: { width: 1000, height: 600 },
   });
   const refresh = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: ["frames", id] }),
+    () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["frames", id] }),
+        queryClient.invalidateQueries({ queryKey: ["statistics", id] }),
+      ]),
     [id, queryClient],
   );
   const actReview = useCallback(
@@ -253,105 +262,143 @@ export function GalleryPage() {
     );
   return (
     <main className="gallery-page">
-      <div className="gallery-bar">
+      <div className="gallery-heading">
         <Link to={`/projects/${id}`}>← Project</Link>
-        <strong>{frames.data?.total.toLocaleString()} frames</strong>
-        <select
-          aria-label="Video filter"
-          value={filters.get("video_id") ?? ""}
-          onChange={(e) => updateFilter("video_id", e.target.value)}
-        >
-          <option value="">All videos</option>
-          {videos.data?.map((video) => (
-            <option key={video.id} value={video.id}>
-              {video.filename}
-            </option>
-          ))}
-        </select>
-        <input
-          aria-label="Search frames"
-          placeholder="Search filename"
-          value={filters.get("search") ?? ""}
-          onChange={(e) => updateFilter("search", e.target.value)}
-        />
-        <select
-          aria-label="Review filter"
-          value={filters.get("review_status") ?? ""}
-          onChange={(e) => updateFilter("review_status", e.target.value)}
-        >
-          <option value="">All review states</option>
-          <option value="unreviewed">Unreviewed</option>
-          <option value="reviewed">Reviewed</option>
-        </select>
-        <label>
-          <input
-            type="checkbox"
-            checked={filters.get("favorite") === "true"}
-            onChange={(e) =>
-              updateFilter("favorite", e.target.checked ? "true" : "")
-            }
-          />{" "}
-          Favorites
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={filters.get("rejected") === "true"}
-            onChange={(e) =>
-              updateFilter("rejected", e.target.checked ? "true" : "")
-            }
-          />{" "}
-          Rejected
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={filters.get("unlabeled") === "true"}
-            onChange={(e) =>
-              updateFilter("unlabeled", e.target.checked ? "true" : "")
-            }
-          />{" "}
-          Unlabeled
-        </label>
-        <input
-          aria-label="Timestamp from"
-          type="number"
-          min="0"
-          step="0.01"
-          placeholder="From seconds"
-          value={filters.get("timestamp_min") ?? ""}
-          onChange={(e) => updateFilter("timestamp_min", e.target.value)}
-        />
-        <input
-          aria-label="Timestamp to"
-          type="number"
-          min="0"
-          step="0.01"
-          placeholder="To seconds"
-          value={filters.get("timestamp_max") ?? ""}
-          onChange={(e) => updateFilter("timestamp_max", e.target.value)}
-        />
+        <div>
+          <p className="eyebrow">Frame review</p>
+          <h2>{frames.data?.total.toLocaleString()} frames</h2>
+        </div>
+        <button onClick={() => setShowHelp(true)}>Keyboard help</button>
+      </div>
+      <section className="review-mode" aria-labelledby="review-mode-heading">
+        <div>
+          <h3 id="review-mode-heading">Review one frame at a time</h3>
+          <p>
+            Double-click a frame to open it. Press <kbd>Space</kbd> to mark it
+            reviewed, then <kbd>→</kbd> for the next frame.
+          </p>
+        </div>
+        <div className="review-mode-progress">
+          <strong>{statistics.data?.reviewed_frames ?? 0} / 100</strong>
+          <progress
+            max="100"
+            value={Math.min(statistics.data?.reviewed_frames ?? 0, 100)}
+          />
+        </div>
         <button
+          className="start-review"
+          disabled={!items.length}
           onClick={() => {
-            history.replace({ search: "" });
-            setPage(1);
+            const first = items.findIndex(
+              (frame) => frame.review_status !== "reviewed",
+            );
+            const index = first >= 0 ? first : 0;
+            setViewer(index);
+            void saveSession(id, { last_frame_id: items[index].id });
           }}
         >
-          Clear filters
+          Start with first unreviewed frame
         </button>
-        <label>
-          Size{" "}
+      </section>
+      <details className="gallery-tools">
+        <summary>Filters and view options</summary>
+        <div className="gallery-bar">
+          <select
+            aria-label="Video filter"
+            value={filters.get("video_id") ?? ""}
+            onChange={(e) => updateFilter("video_id", e.target.value)}
+          >
+            <option value="">All videos</option>
+            {videos.data?.map((video) => (
+              <option key={video.id} value={video.id}>
+                {video.filename}
+              </option>
+            ))}
+          </select>
           <input
-            type="range"
-            min="110"
-            max="280"
-            value={size}
-            onChange={(e) => setSize(Number(e.target.value))}
+            aria-label="Search frames"
+            placeholder="Search filename"
+            value={filters.get("search") ?? ""}
+            onChange={(e) => updateFilter("search", e.target.value)}
           />
-        </label>
-        <span>{affectedCount.toLocaleString()} selected</span>
-        <button onClick={() => setShowHelp(true)}>Shortcut help</button>
-      </div>
+          <select
+            aria-label="Review filter"
+            value={filters.get("review_status") ?? ""}
+            onChange={(e) => updateFilter("review_status", e.target.value)}
+          >
+            <option value="">All review states</option>
+            <option value="unreviewed">Unreviewed</option>
+            <option value="reviewed">Reviewed</option>
+          </select>
+          <label>
+            <input
+              type="checkbox"
+              checked={filters.get("favorite") === "true"}
+              onChange={(e) =>
+                updateFilter("favorite", e.target.checked ? "true" : "")
+              }
+            />{" "}
+            Favorites
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={filters.get("rejected") === "true"}
+              onChange={(e) =>
+                updateFilter("rejected", e.target.checked ? "true" : "")
+              }
+            />{" "}
+            Rejected
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={filters.get("unlabeled") === "true"}
+              onChange={(e) =>
+                updateFilter("unlabeled", e.target.checked ? "true" : "")
+              }
+            />{" "}
+            Unlabeled
+          </label>
+          <input
+            aria-label="Timestamp from"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="From seconds"
+            value={filters.get("timestamp_min") ?? ""}
+            onChange={(e) => updateFilter("timestamp_min", e.target.value)}
+          />
+          <input
+            aria-label="Timestamp to"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="To seconds"
+            value={filters.get("timestamp_max") ?? ""}
+            onChange={(e) => updateFilter("timestamp_max", e.target.value)}
+          />
+          <button
+            onClick={() => {
+              history.replace({ search: "" });
+              setPage(1);
+            }}
+          >
+            Clear filters
+          </button>
+          <label>
+            Size{" "}
+            <input
+              type="range"
+              min="110"
+              max="280"
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+            />
+          </label>
+          <span>{affectedCount.toLocaleString()} selected</span>
+        </div>
+      </details>
       {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
       <ReviewQueuePanel
         projectId={id}
@@ -368,180 +415,187 @@ export function GalleryPage() {
         }}
       />
       <ActionHistoryPanel projectId={id} />
-      <aside className="label-bar">
-        <ExportPanel
-          projectId={id}
-          selectedIds={[...selected]}
-          allFiltered={allFiltered}
-          filters={filterObject}
-        />
-        <button
-          onClick={() => {
-            setAllFiltered(false);
-            setSelected(new Set(items.map((frame) => frame.id)));
-          }}
-        >
-          Select visible
-        </button>
-        <button
-          onClick={() => {
-            setAllFiltered(true);
-            setSelected(new Set());
-          }}
-        >
-          Select all {frames.data?.total.toLocaleString()} filtered
-        </button>
-        <button
-          onClick={() => {
-            setAllFiltered(false);
-            setSelected(
-              new Set(
-                items
-                  .filter((frame) => !selected.has(frame.id))
-                  .map((frame) => frame.id),
-              ),
-            );
-          }}
-        >
-          Invert visible
-        </button>
-        <button
-          onClick={() => {
-            setAllFiltered(false);
-            setSelected(new Set());
-          }}
-        >
-          Clear selection
-        </button>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void createLabel(id, {
-              name: newLabel,
-              shortcut: shortcut || null,
-              color: "#69e2bc",
-            }).then(() => {
-              setNewLabel("");
-              setShortcut("");
-              return queryClient.invalidateQueries({
-                queryKey: ["labels", id],
+      <details className="bulk-tools">
+        <summary>Selection, labels, and batch actions</summary>
+        <aside className="label-bar">
+          <ExportPanel
+            projectId={id}
+            selectedIds={[...selected]}
+            allFiltered={allFiltered}
+            filters={filterObject}
+          />
+          <button
+            onClick={() => {
+              setAllFiltered(false);
+              setSelected(new Set(items.map((frame) => frame.id)));
+            }}
+          >
+            Select visible
+          </button>
+          <button
+            onClick={() => {
+              setAllFiltered(true);
+              setSelected(new Set());
+            }}
+          >
+            Select all {frames.data?.total.toLocaleString()} filtered
+          </button>
+          <button
+            onClick={() => {
+              setAllFiltered(false);
+              setSelected(
+                new Set(
+                  items
+                    .filter((frame) => !selected.has(frame.id))
+                    .map((frame) => frame.id),
+                ),
+              );
+            }}
+          >
+            Invert visible
+          </button>
+          <button
+            onClick={() => {
+              setAllFiltered(false);
+              setSelected(new Set());
+            }}
+          >
+            Clear selection
+          </button>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void createLabel(id, {
+                name: newLabel,
+                shortcut: shortcut || null,
+                color: "#69e2bc",
+              }).then(() => {
+                setNewLabel("");
+                setShortcut("");
+                return queryClient.invalidateQueries({
+                  queryKey: ["labels", id],
+                });
               });
-            });
-          }}
-        >
-          <input
-            aria-label="New label"
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            placeholder="New label"
-            required
-          />
-          <input
-            aria-label="Shortcut"
-            value={shortcut}
-            onChange={(e) => setShortcut(e.target.value)}
-            placeholder="Key"
-            maxLength={2}
-          />
-          <button>Add</button>
-        </form>
-        {labels.data?.map((label) => (
-          <span key={label.id} className="label-action">
-            <label title="Filter by label">
-              <input
-                type="checkbox"
-                checked={filters.getAll("label_ids").includes(String(label.id))}
-                onChange={(e) => toggleLabelFilter(label.id, e.target.checked)}
-              />
-              {label.name}
-            </label>
-            <button
-              style={{ borderColor: label.color }}
-              onClick={() => {
-                if (!confirmBatch(`Assign ${label.name} to`)) return;
-                void filteredBulkLabels(
-                  id,
-                  batchTarget,
-                  [label.id],
-                  "assign",
-                ).then(refresh);
-                setUndo(
-                  () => async () =>
-                    filteredBulkLabels(id, batchTarget, [label.id], "remove"),
-                );
-              }}
-            >
-              Assign{label.shortcut && <kbd>{label.shortcut}</kbd>}
-            </button>
-            <button
-              disabled={!affectedCount}
-              onClick={() => {
-                if (!confirmBatch(`Remove ${label.name} from`)) return;
-                void filteredBulkLabels(
-                  id,
-                  batchTarget,
-                  [label.id],
-                  "remove",
-                ).then(refresh);
-                setUndo(
-                  () => async () =>
-                    filteredBulkLabels(id, batchTarget, [label.id], "assign"),
-                );
-              }}
-            >
-              Remove
-            </button>
-          </span>
-        ))}
-        <button
-          disabled={!affectedCount}
-          onClick={() => {
-            if (!confirmBatch("Mark reviewed")) return;
-            void filteredBulkReview(id, batchTarget, {
-              review_status: "reviewed",
-            }).then(refresh);
-            setUndo(
-              () => async () =>
-                filteredBulkReview(id, batchTarget, {
-                  review_status: "unreviewed",
-                }),
-            );
-          }}
-        >
-          Mark reviewed
-        </button>
-        <button
-          disabled={!affectedCount}
-          onClick={() => {
-            if (confirmBatch("Mark rejected"))
-              void filteredBulkReview(id, batchTarget, { rejected: true }).then(
-                refresh,
+            }}
+          >
+            <input
+              aria-label="New label"
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="New label"
+              required
+            />
+            <input
+              aria-label="Shortcut"
+              value={shortcut}
+              onChange={(e) => setShortcut(e.target.value)}
+              placeholder="Key"
+              maxLength={2}
+            />
+            <button>Add</button>
+          </form>
+          {labels.data?.map((label) => (
+            <span key={label.id} className="label-action">
+              <label title="Filter by label">
+                <input
+                  type="checkbox"
+                  checked={filters
+                    .getAll("label_ids")
+                    .includes(String(label.id))}
+                  onChange={(e) =>
+                    toggleLabelFilter(label.id, e.target.checked)
+                  }
+                />
+                {label.name}
+              </label>
+              <button
+                style={{ borderColor: label.color }}
+                onClick={() => {
+                  if (!confirmBatch(`Assign ${label.name} to`)) return;
+                  void filteredBulkLabels(
+                    id,
+                    batchTarget,
+                    [label.id],
+                    "assign",
+                  ).then(refresh);
+                  setUndo(
+                    () => async () =>
+                      filteredBulkLabels(id, batchTarget, [label.id], "remove"),
+                  );
+                }}
+              >
+                Assign{label.shortcut && <kbd>{label.shortcut}</kbd>}
+              </button>
+              <button
+                disabled={!affectedCount}
+                onClick={() => {
+                  if (!confirmBatch(`Remove ${label.name} from`)) return;
+                  void filteredBulkLabels(
+                    id,
+                    batchTarget,
+                    [label.id],
+                    "remove",
+                  ).then(refresh);
+                  setUndo(
+                    () => async () =>
+                      filteredBulkLabels(id, batchTarget, [label.id], "assign"),
+                  );
+                }}
+              >
+                Remove
+              </button>
+            </span>
+          ))}
+          <button
+            disabled={!affectedCount}
+            onClick={() => {
+              if (!confirmBatch("Mark reviewed")) return;
+              void filteredBulkReview(id, batchTarget, {
+                review_status: "reviewed",
+              }).then(refresh);
+              setUndo(
+                () => async () =>
+                  filteredBulkReview(id, batchTarget, {
+                    review_status: "unreviewed",
+                  }),
               );
-          }}
-        >
-          Mark rejected
-        </button>
-        <button
-          disabled={!affectedCount}
-          onClick={() => {
-            if (confirmBatch("Mark favorite"))
-              void filteredBulkReview(id, batchTarget, { favorite: true }).then(
-                refresh,
-              );
-          }}
-        >
-          Mark favorite
-        </button>
-        <button
-          disabled={!undo}
-          onClick={() => {
-            void undo?.().then(refresh);
-            setUndo(null);
-          }}
-        >
-          Undo
-        </button>
-      </aside>
+            }}
+          >
+            Mark reviewed
+          </button>
+          <button
+            disabled={!affectedCount}
+            onClick={() => {
+              if (confirmBatch("Mark rejected"))
+                void filteredBulkReview(id, batchTarget, {
+                  rejected: true,
+                }).then(refresh);
+            }}
+          >
+            Mark rejected
+          </button>
+          <button
+            disabled={!affectedCount}
+            onClick={() => {
+              if (confirmBatch("Mark favorite"))
+                void filteredBulkReview(id, batchTarget, {
+                  favorite: true,
+                }).then(refresh);
+            }}
+          >
+            Mark favorite
+          </button>
+          <button
+            disabled={!undo}
+            onClick={() => {
+              void undo?.().then(refresh);
+              setUndo(null);
+            }}
+          >
+            Undo
+          </button>
+        </aside>
+      </details>
       {filters.get("video_id") && (
         <VideoTimeline
           videoId={Number(filters.get("video_id"))}

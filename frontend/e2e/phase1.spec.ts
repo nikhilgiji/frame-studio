@@ -35,17 +35,22 @@ test("complete Phase 1 curation workflow persists", async ({ page }) => {
 
   await page.getByRole("link", { name: /Open frame gallery/ }).click();
   await expect(page.getByText("6 frames")).toBeVisible();
-  const first = page.getByRole("img", { name: "Frame 0" }).locator("..");
-  await first.click();
-  await page.keyboard.press("v");
-  await expect(first.getByText("Vehicle")).toBeVisible();
-  await page.getByRole("button", { name: "Mark reviewed" }).click();
-  await expect(first.getByText(/reviewed/)).toBeVisible();
-  await first.dblclick();
+  await page
+    .getByRole("button", { name: "Start with first unreviewed frame" })
+    .click();
   await expect(page.getByRole("dialog", { name: "Frame 0" })).toBeVisible();
+  await page.keyboard.press("Space");
+  await expect(
+    page.getByRole("dialog", { name: "Frame 0" }).getByText(/reviewed/),
+  ).toBeVisible();
+  await page.keyboard.press("v");
   await page.keyboard.press("f");
   await page.keyboard.press("Escape");
+  const first = page.getByRole("img", { name: "Frame 0" }).locator("..");
+  await expect(first.getByText("Vehicle")).toBeVisible();
+  await expect(first.getByText(/reviewed/)).toBeVisible();
 
+  await page.getByText("Selection, labels, and batch actions").click();
   await page.getByRole("button", { name: "Export dataset" }).click();
   await page.getByLabel("Folder name").fill(`e2e-${Date.now()}`);
   await page.getByRole("button", { name: "Start export" }).click();
@@ -58,6 +63,7 @@ test("complete Phase 1 curation workflow persists", async ({ page }) => {
   await expect(restoredViewer).toBeVisible();
   await expect(restoredViewer.getByText("Vehicle")).toBeVisible();
   await page.keyboard.press("Escape");
+  await page.getByText("Filters and view options").click();
   await page.getByLabel("Favorites").check();
   await expect(page.getByText("1 frames", { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/favorite=true/);
@@ -67,6 +73,7 @@ test("complete Phase 1 curation workflow persists", async ({ page }) => {
   await expect(page.getByRole("dialog", { name: "Frame 0" })).toBeVisible();
   await page.keyboard.press("Escape");
 
+  await page.getByText("Filters and view options").click();
   await page.getByLabel("Video filter").selectOption({ label: "e2e.avi" });
   await expect(
     page.getByRole("region", { name: "Video timeline" }),
