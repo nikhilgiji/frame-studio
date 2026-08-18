@@ -36,6 +36,25 @@ test("complete Phase 1 curation workflow persists", async ({ page }) => {
 
   await page.getByRole("link", { name: /Open frame gallery/ }).click();
   await expect(page.getByText("6 frames")).toBeVisible();
+  for (const viewport of [
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+    { width: 320, height: 720 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const widths = await page.evaluate(() => {
+      const gallery = document.querySelector(".gallery-scroll");
+      return {
+        pageClient: document.documentElement.clientWidth,
+        pageScroll: document.documentElement.scrollWidth,
+        galleryClient: gallery?.clientWidth ?? 0,
+        galleryScroll: gallery?.scrollWidth ?? 0,
+      };
+    });
+    expect(widths.pageScroll).toBeLessThanOrEqual(widths.pageClient);
+    expect(widths.galleryScroll).toBeLessThanOrEqual(widths.galleryClient);
+  }
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page
     .getByRole("button", { name: "Start with first unreviewed frame" })
     .click();
@@ -120,9 +139,13 @@ test("project dashboard adapts without horizontal overflow", async ({
   await page.getByRole("link", { name: projectName }).click();
 
   for (const viewport of [
+    { width: 1440, height: 900 },
     { width: 1280, height: 800 },
+    { width: 1024, height: 768 },
     { width: 820, height: 900 },
+    { width: 768, height: 1024 },
     { width: 390, height: 844 },
+    { width: 320, height: 720 },
   ]) {
     await page.setViewportSize(viewport);
     for (const tab of ["Overview", "Labels", "Videos"]) {

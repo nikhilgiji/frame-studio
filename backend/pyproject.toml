@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "vision-curator-backend"
+name = "frame-studio-backend"
 version = "0.1.0"
-description = "Local API for Vision Curator"
+description = "Local API for Frame Studio"
 requires-python = ">=3.11"
 dependencies = [
   "alembic>=1.14,<2",

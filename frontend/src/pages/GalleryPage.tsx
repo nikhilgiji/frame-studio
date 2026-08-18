@@ -42,6 +42,7 @@ export function GalleryPage() {
   );
   const [page, setPage] = useState(Number(filters.get("page") ?? 1));
   const [size, setSize] = useState(180);
+  const [galleryWidth, setGalleryWidth] = useState(1000);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [allFiltered, setAllFiltered] = useState(false);
   const [anchor, setAnchor] = useState<number | null>(null);
@@ -115,12 +116,27 @@ export function GalleryPage() {
       }
     }
   }, [items, session.data?.last_frame_id]);
-  const columns = Math.max(1, Math.floor(1000 / (size + 14)));
+  useEffect(() => {
+    const element = scroll.current;
+    if (!element) return;
+    const updateWidth = () => setGalleryWidth(element.clientWidth);
+    updateWidth();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateWidth);
+      return () => window.removeEventListener("resize", updateWidth);
+    }
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [items.length]);
+  const availableWidth = Math.max(1, galleryWidth - 20);
+  const cardWidth = Math.min(size, availableWidth);
+  const columns = Math.max(1, Math.floor(availableWidth / (cardWidth + 12)));
   const rows = Math.ceil(items.length / columns);
   const virtual = useVirtualizer({
     count: rows,
     getScrollElement: () => scroll.current,
-    estimateSize: () => size + 54,
+    estimateSize: () => cardWidth * 0.65 + 82,
     overscan: 2,
     initialRect: { width: 1000, height: 600 },
   });
@@ -279,10 +295,13 @@ export function GalleryPage() {
           </p>
         </div>
         <div className="review-mode-progress">
-          <strong>{statistics.data?.reviewed_frames ?? 0} / 100</strong>
+          <strong>
+            {(statistics.data?.reviewed_frames ?? 0).toLocaleString()} /{" "}
+            {(statistics.data?.total_frames ?? 0).toLocaleString()} reviewed
+          </strong>
           <progress
-            max="100"
-            value={Math.min(statistics.data?.reviewed_frames ?? 0, 100)}
+            max={Math.max(statistics.data?.total_frames ?? 0, 1)}
+            value={statistics.data?.reviewed_frames ?? 0}
           />
         </div>
         <button
@@ -632,7 +651,7 @@ export function GalleryPage() {
                 style={{
                   position: "absolute",
                   transform: `translateY(${row.start}px)`,
-                  gridTemplateColumns: `repeat(${columns}, ${size}px)`,
+                  gridTemplateColumns: `repeat(${columns}, minmax(0, ${cardWidth}px))`,
                 }}
               >
                 {items
@@ -653,7 +672,7 @@ export function GalleryPage() {
                           loading="lazy"
                           src={thumbnailUrl(frame.id)}
                           alt={`Frame ${frame.frame_number}`}
-                          style={{ height: size * 0.65 }}
+                          style={{ height: cardWidth * 0.65 }}
                         />
                         <span>
                           #{frame.frame_number} ·{" "}

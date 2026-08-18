@@ -1,0 +1,9 @@
+services:
+  backend:
+    build:
+      context: ./backend
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api/v1

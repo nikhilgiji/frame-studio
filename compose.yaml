@@ -1,0 +1,38 @@
+name: frame-studio
+
+services:
+  backend:
+    image: ghcr.io/nikhilgiji/frame-studio-backend:${FRAME_STUDIO_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      VISION_CURATOR_APP_NAME: Frame Studio
+      VISION_CURATOR_ENVIRONMENT: production
+      VISION_CURATOR_DATABASE_URL: sqlite:////data/frame-studio.db
+      VISION_CURATOR_STORAGE_ROOT: /data/storage
+      VISION_CURATOR_CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
+      VISION_CURATOR_CONCURRENT_JOB_LIMIT: ${FRAME_STUDIO_JOB_LIMIT:-2}
+    volumes:
+      - frame-studio-data:/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+
+  frontend:
+    image: ghcr.io/nikhilgiji/frame-studio-frontend:${FRAME_STUDIO_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRAME_STUDIO_PORT:-3000}:80"
+
+volumes:
+  frame-studio-data:
+    name: frame-studio-data

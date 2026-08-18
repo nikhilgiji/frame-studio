@@ -83,10 +83,10 @@ export function HomePage() {
         <section
           className="onboarding"
           role="dialog"
-          aria-label="Welcome to Vision Curator"
+          aria-label="Welcome to Frame Studio"
         >
           <p className="eyebrow">First run</p>
-          <h3>Welcome to Vision Curator</h3>
+          <h3>Welcome to Frame Studio</h3>
           <ol>
             <li>Create a project and import local videos.</li>
             <li>Extract frames with the sampling mode you need.</li>

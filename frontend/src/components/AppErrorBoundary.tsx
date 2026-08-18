@@ -23,7 +23,7 @@ export class AppErrorBoundary extends Component<Props, State> {
       return (
         <main className="centered">
           <div className="error" role="alert">
-            Vision Curator could not render this page.
+            Frame Studio could not render this page.
           </div>
         </main>
       );

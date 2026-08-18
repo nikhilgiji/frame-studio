@@ -17,3 +17,4 @@ frontend/vite.config.d.ts
 frontend/test-results/
 frontend/playwright-report/
 frontend/tests/fixtures/e2e.avi
+docs/_build/

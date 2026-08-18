@@ -1,1 +1,1 @@
-"""Vision Curator backend package."""
+"""Frame Studio backend package."""

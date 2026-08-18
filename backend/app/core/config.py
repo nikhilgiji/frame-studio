@@ -8,7 +8,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
-    app_name: str = "Vision Curator"
+    app_name: str = "Frame Studio"
     environment: str = "development"
     database_url: str = "sqlite:///./vision_curator.db"
     storage_root: Path = Path("../storage")

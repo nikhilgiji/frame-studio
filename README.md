@@ -1,6 +1,21 @@
-# Vision Curator
+# Frame Studio
 
-Vision Curator is a local web application for turning videos into curated computer-vision frame datasets. Phase 2 adds timeline navigation, server-side batch actions, configurable shortcuts, persistent review queues, statistics, unified job recovery, multi-step undo/redo, integrity repair, and a guided responsive interface to the complete Phase 1 curation workflow. The default bright analytics theme uses a warm neutral canvas, white cards, high-contrast navigation, and distinct chart colors; dark mode remains available.
+Frame Studio is a private, local web application for turning videos into curated computer-vision frame datasets. It provides guided import, frame extraction, review, labeling, statistics, queues, integrity checks, and export in a responsive workspace. The default bright analytics theme uses a warm neutral canvas, white cards, high-contrast navigation, and distinct chart colors; dark mode remains available.
+
+The complete user guide is available in the [Read the Docs site](docs/index.rst), including illustrated setup, workflow, feature, shortcut, and troubleshooting pages.
+
+## Run with prebuilt Docker images
+
+Docker users do not need Python, Node.js, npm, or a local build:
+
+```bash
+mkdir frame-studio && cd frame-studio
+curl -LO https://raw.githubusercontent.com/nikhilgiji/frame-studio/main/compose.yaml
+docker compose pull
+docker compose up -d
+```
+
+Open <http://localhost:3000>. Application data persists in the named `frame-studio-data` volume. See the [Docker download and operations guide](docs/download-and-docker.rst) for alternate ports, upgrades, pinned releases, backups, logs, and source builds.
 
 ## Prerequisites
 
@@ -22,6 +37,8 @@ cp .env.example .env
 ```
 
 All Python commands below either assume `.venv` is active or call its executables explicitly. Application data is local: the default SQLite database is `backend/vision_curator.db`, and managed media, thumbnails, and exports are under `storage/`.
+
+The database filename, `VISION_CURATOR_*` environment variables, and `vision-curator:*` browser storage keys retain their original names for backward compatibility with existing installations.
 
 ## Database migrations
 

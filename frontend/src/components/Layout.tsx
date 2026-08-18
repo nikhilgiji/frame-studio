@@ -15,8 +15,8 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <header className="app-header">
         <Link to="/" className="app-brand">
-          <span className="brand-mark">VC</span>
-          <span>Vision Curator</span>
+          <span className="brand-mark">FS</span>
+          <span>Frame Studio</span>
         </Link>
         <nav>
           <NavLink exact to="/" activeClassName="active">
