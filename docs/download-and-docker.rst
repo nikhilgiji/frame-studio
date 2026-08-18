@@ -45,10 +45,8 @@ browser traffic uses the same-origin Nginx proxy.
 
 .. note::
 
-   The images are published for Intel/AMD 64-bit and ARM64 systems, including
-   Apple Silicon. After the first workflow run, the repository owner must make
-   both ``frame-studio-backend`` and ``frame-studio-frontend`` packages public
-   in GitHub package settings so users can pull them without signing in.
+   The public images are published for Intel/AMD 64-bit and ARM64 systems,
+   including Apple Silicon, and can be pulled without signing in to GitHub.
 
 Manage the application
 ----------------------

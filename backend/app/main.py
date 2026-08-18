@@ -2,8 +2,9 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
@@ -43,6 +44,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     install_error_handlers(app)
     app.include_router(api_router, prefix="/api/v1")
+
+    static_root = Path(__file__).resolve().parent / "static"
+    index_file = static_root / "index.html"
+    if index_file.is_file():
+
+        @app.get("/", include_in_schema=False)
+        async def frontend_index() -> FileResponse:
+            return FileResponse(index_file)
+
+        @app.get("/{frontend_path:path}", include_in_schema=False)
+        async def frontend_route(frontend_path: str) -> FileResponse:
+            candidate = (static_root / frontend_path).resolve()
+            if candidate.is_relative_to(static_root) and candidate.is_file():
+                return FileResponse(candidate)
+            if frontend_path.startswith(("api/", "assets/")):
+                raise HTTPException(status_code=404, detail="Not found")
+            return FileResponse(index_file)
+
     return app
 
 

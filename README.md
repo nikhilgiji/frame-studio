@@ -19,7 +19,7 @@ Open <http://localhost:3000>. Application data persists in the named `frame-stud
 
 ## Install without Docker
 
-Running directly from source requires Git, Python 3.11 or newer, Node.js 20 or newer, npm, and a Chromium-compatible browser.
+Running Frame Studio directly requires only Git, Python 3.11 or newer, and a modern browser. The compiled interface is included in the Python package, so users do not install Node.js or npm.
 
 ### macOS or Linux
 
@@ -28,13 +28,12 @@ Download the release, create the repository-local virtual environment, and activ
 ```bash
 git clone https://github.com/nikhilgiji/frame-studio.git
 cd frame-studio
-git checkout v0.1.0
+git checkout v0.1.1
 
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install ./backend
-npm ci --prefix frontend
 cp .env.example .env
 ```
 
@@ -46,7 +45,7 @@ cd backend
 cd ..
 ```
 
-Start the backend in the first terminal:
+Start Frame Studio:
 
 ```bash
 source .venv/bin/activate
@@ -54,25 +53,17 @@ cd backend
 ../.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Start the frontend in a second terminal:
-
-```bash
-cd frame-studio/frontend
-npm run dev
-```
-
 ### Windows PowerShell
 
 ```powershell
 git clone https://github.com/nikhilgiji/frame-studio.git
 Set-Location frame-studio
-git checkout v0.1.0
+git checkout v0.1.1
 
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install .\backend
-npm ci --prefix frontend
 Copy-Item .env.example .env
 
 Set-Location backend
@@ -80,14 +71,7 @@ Set-Location backend
 ..\.venv\Scripts\uvicorn.exe app.main:app --host 127.0.0.1 --port 8000
 ```
 
-In a second PowerShell window:
-
-```powershell
-Set-Location frame-studio\frontend
-npm run dev
-```
-
-Open <http://127.0.0.1:3000>. A `404` response at `http://127.0.0.1:8000/` is normal—the backend serves the API at `/api/v1` and its interactive documentation at <http://127.0.0.1:8000/docs>.
+Open <http://127.0.0.1:8000>. The same Python process serves the interface and API. Interactive API documentation remains available at <http://127.0.0.1:8000/docs>.
 
 To update a source installation later:
 
@@ -95,7 +79,6 @@ To update a source installation later:
 git pull
 source .venv/bin/activate
 python -m pip install ./backend
-npm ci --prefix frontend
 cd backend && ../.venv/bin/alembic upgrade head
 ```
 
@@ -103,8 +86,8 @@ The expanded source-installation guide is available in [Getting started](docs/ge
 
 ## Prerequisites
 
-- Python 3.11 or newer
-- Node.js 20 or newer
+- Python 3.11 or newer for normal installation
+- Node.js 20 or newer only when modifying/rebuilding the frontend
 - A browser supported by Chromium
 
 ## Developer setup
@@ -137,7 +120,7 @@ cd ..
 
 The expected Phase 2 candidate head is `20260804_0010`. Migrations retain existing SQLite data. Back up valuable databases before downgrading or changing migration history.
 
-## Run locally
+## Run locally for frontend development
 
 Backend, from the repository root:
 
@@ -146,7 +129,7 @@ cd backend
 ../.venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Frontend, in another terminal:
+Frontend development server, in another terminal:
 
 ```bash
 cd frontend
