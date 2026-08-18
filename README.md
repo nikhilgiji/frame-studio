@@ -17,13 +17,97 @@ docker compose up -d
 
 Open <http://localhost:3000>. Application data persists in the named `frame-studio-data` volume. See the [Docker download and operations guide](docs/download-and-docker.rst) for alternate ports, upgrades, pinned releases, backups, logs, and source builds.
 
+## Install without Docker
+
+Running directly from source requires Git, Python 3.11 or newer, Node.js 20 or newer, npm, and a Chromium-compatible browser.
+
+### macOS or Linux
+
+Download the release, create the repository-local virtual environment, and activate it **before installing anything**:
+
+```bash
+git clone https://github.com/nikhilgiji/frame-studio.git
+cd frame-studio
+git checkout v0.1.0
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install ./backend
+npm ci --prefix frontend
+cp .env.example .env
+```
+
+Prepare the database:
+
+```bash
+cd backend
+../.venv/bin/alembic upgrade head
+cd ..
+```
+
+Start the backend in the first terminal:
+
+```bash
+source .venv/bin/activate
+cd backend
+../.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Start the frontend in a second terminal:
+
+```bash
+cd frame-studio/frontend
+npm run dev
+```
+
+### Windows PowerShell
+
+```powershell
+git clone https://github.com/nikhilgiji/frame-studio.git
+Set-Location frame-studio
+git checkout v0.1.0
+
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install .\backend
+npm ci --prefix frontend
+Copy-Item .env.example .env
+
+Set-Location backend
+..\.venv\Scripts\alembic.exe upgrade head
+..\.venv\Scripts\uvicorn.exe app.main:app --host 127.0.0.1 --port 8000
+```
+
+In a second PowerShell window:
+
+```powershell
+Set-Location frame-studio\frontend
+npm run dev
+```
+
+Open <http://127.0.0.1:3000>. A `404` response at `http://127.0.0.1:8000/` is normal—the backend serves the API at `/api/v1` and its interactive documentation at <http://127.0.0.1:8000/docs>.
+
+To update a source installation later:
+
+```bash
+git pull
+source .venv/bin/activate
+python -m pip install ./backend
+npm ci --prefix frontend
+cd backend && ../.venv/bin/alembic upgrade head
+```
+
+The expanded source-installation guide is available in [Getting started](docs/getting-started.rst).
+
 ## Prerequisites
 
 - Python 3.11 or newer
 - Node.js 20 or newer
 - A browser supported by Chromium
 
-## Clean setup
+## Developer setup
 
 Create and activate the repository-local Python environment **before installing any Python package**:
 
