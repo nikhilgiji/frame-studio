@@ -84,6 +84,84 @@ cd backend && ../.venv/bin/alembic upgrade head
 
 The expanded source-installation guide is available in [Getting started](docs/getting-started.rst).
 
+## Upgrade an existing clone without Node.js
+
+If an older Frame Studio repository is already cloned on another computer, update it in place. Node.js, npm, and the Vite development server are not required for release `v0.1.1` or newer.
+
+Before updating, check for local changes:
+
+```bash
+cd /path/to/frame-studio
+git status
+```
+
+If files are modified, commit them or temporarily store them before pulling. Do not discard work with a reset:
+
+```bash
+git stash push -u -m "work laptop changes"
+```
+
+### macOS or Linux upgrade
+
+```bash
+git fetch --tags origin
+git switch main
+git pull --ff-only origin main
+git log -1 --oneline
+```
+
+The latest commit should be `7771ef3` or newer. Reuse the existing virtual environment, or create it if it does not exist:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install --upgrade ./backend
+test -f .env || cp .env.example .env
+```
+
+Back up valuable data before applying migrations. With the default configuration, the SQLite database is `backend/vision_curator.db` and managed media is under `storage/`.
+
+```bash
+cd backend
+../.venv/bin/alembic upgrade head
+../.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Open <http://127.0.0.1:8000>. Do not run `npm install`, `npm ci`, or `npm run dev`.
+
+If changes were stashed, restore them after the update and resolve any reported conflicts carefully:
+
+```bash
+git stash pop
+```
+
+### Windows PowerShell upgrade
+
+```powershell
+Set-Location C:\path\to\frame-studio
+git status
+git fetch --tags origin
+git switch main
+git pull --ff-only origin main
+git log -1 --oneline
+
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install --upgrade .\backend
+
+if (-not (Test-Path .env)) {
+    Copy-Item .env.example .env
+}
+
+Set-Location backend
+..\.venv\Scripts\alembic.exe upgrade head
+..\.venv\Scripts\uvicorn.exe app.main:app --host 127.0.0.1 --port 8000
+```
+
+Open <http://127.0.0.1:8000>. The Python process serves both the interface and API.
+
 ## Prerequisites
 
 - Python 3.11 or newer for normal installation
