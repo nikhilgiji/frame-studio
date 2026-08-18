@@ -48,7 +48,11 @@ export function ExportPanel({
     onSuccess: () => void job.refetch(),
   });
   if (!open)
-    return <button onClick={() => setOpen(true)}>Export dataset</button>;
+    return (
+      <button className="secondary-action" onClick={() => setOpen(true)}>
+        Export dataset
+      </button>
+    );
   return (
     <section className="export-panel">
       <h3>Export dataset</h3>

@@ -78,6 +78,7 @@ test("creates, edits, opens, and deletes a project with confirmation", async () 
   ).toBeInTheDocument();
 
   await user.click(screen.getByRole("link", { name: "Road Scenes" }));
+  await user.click(await screen.findByRole("button", { name: /Videos/ }));
   expect(await screen.findByText("No videos imported")).toBeInTheDocument();
   await user.click(screen.getByRole("link", { name: /All projects/ }));
   await user.click(await screen.findByRole("button", { name: "Delete" }));

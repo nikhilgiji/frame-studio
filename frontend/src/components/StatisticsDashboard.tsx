@@ -42,8 +42,11 @@ export function StatisticsDashboard({ projectId }: { projectId: number }) {
     ));
   };
   return (
-    <details className="statistics-dashboard">
-      <summary>Statistics dashboard</summary>
+    <details className="statistics-dashboard" open>
+      <summary>
+        <span>Statistics dashboard</span>
+        <small>Filter and inspect project activity</small>
+      </summary>
       <div className="statistics-filters">
         <select
           aria-label="Statistics video"

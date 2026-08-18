@@ -14,11 +14,13 @@ test("complete Phase 1 curation workflow persists", async ({ page }) => {
   await page.getByRole("button", { name: "Create project" }).click();
   await page.getByRole("link", { name: projectName }).click();
 
+  await page.getByRole("button", { name: /Labels/ }).click();
   await page.getByLabel("Label name").fill("Vehicle");
   await page.getByLabel("Label shortcut").fill("v");
   await page.getByRole("button", { name: "Add label" }).click();
   await expect(page.getByText("Vehicle").first()).toBeVisible();
 
+  await page.getByRole("button", { name: /Videos/ }).click();
   await page
     .getByLabel("Choose files")
     .setInputFiles(path.resolve("tests/fixtures/e2e.avi"));

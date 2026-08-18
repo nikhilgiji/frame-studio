@@ -73,6 +73,7 @@ test("configures extraction and displays completed progress", async () => {
   });
   window.history.pushState({}, "", "/projects/1");
   render(<App />);
+  await user.click(await screen.findByRole("button", { name: /Videos/ }));
   await user.click(
     await screen.findByRole("button", { name: "Extract frames" }),
   );

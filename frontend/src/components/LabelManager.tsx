@@ -52,7 +52,7 @@ export function LabelManager({ projectId }: { projectId: number }) {
   }
   return (
     <section className="label-manager">
-      <h3>Labels</h3>
+      <h4>Create a label</h4>
       <form onSubmit={(e) => void add(e)}>
         <input
           aria-label="Label name"
@@ -81,7 +81,7 @@ export function LabelManager({ projectId }: { projectId: number }) {
           {error}
         </div>
       )}
-      <div>
+      <div className="label-list">
         {labels.data?.map((label, index) => (
           <span key={label.id} style={{ borderColor: label.color }}>
             <b>{label.name}</b>

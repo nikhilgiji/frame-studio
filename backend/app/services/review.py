@@ -1,5 +1,6 @@
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
@@ -223,7 +224,7 @@ class ReviewService:
         frame_ids: list[int],
         all_filtered: bool,
         filters: dict[str, object],
-        storage_root,
+        storage_root: Path,
     ) -> list[int]:
         if all_filtered:
             from app.services.frame import FrameService

@@ -29,13 +29,22 @@ export function JobHistory({ projectId }: { projectId: number }) {
   });
   return (
     <details className="job-history">
-      <summary>Background job history</summary>
-      <button onClick={() => void clearCompletedJobs(projectId).then(refresh)}>
-        Clear completed history
-      </button>
-      <button onClick={() => void createThumbnailJob(projectId).then(refresh)}>
-        Regenerate thumbnails in background
-      </button>
+      <summary>
+        <span>Background jobs</span>
+        <small>Extraction, export, and thumbnail activity</small>
+      </summary>
+      <div className="panel-actions">
+        <button
+          onClick={() => void clearCompletedJobs(projectId).then(refresh)}
+        >
+          Clear completed
+        </button>
+        <button
+          onClick={() => void createThumbnailJob(projectId).then(refresh)}
+        >
+          Regenerate thumbnails
+        </button>
+      </div>
       {!jobs.data?.length && <p>No background jobs yet.</p>}
       {jobs.data?.map((job) => (
         <article key={job.key}>

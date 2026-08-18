@@ -73,6 +73,7 @@ test("imports multiple videos, displays metadata, and confirms deletion", async 
   });
   window.history.pushState({}, "", "/projects/1");
   render(<App />);
+  await user.click(await screen.findByRole("button", { name: /Videos/ }));
 
   const files = [
     new File(["video"], "drive.mp4", { type: "video/mp4" }),

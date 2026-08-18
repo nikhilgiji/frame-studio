@@ -2,6 +2,16 @@
 
 Candidate verification date: 2026-08-04
 
+Acceptance-remediation verification date: 2026-08-18
+
+## Owner acceptance remediation
+
+The owner review identified that the original project dashboard was difficult to understand, presented all tools in one long scrolling stack, used inconsistent browser-default controls, and made disabled actions difficult to read. The remediation introduces a compact project header, consistent form and button styles, explicit primary and secondary actions, an export dialog, improved contrast, and three task-focused workspace tabs: **Overview**, **Labels**, and **Videos**. Only the active task panel is rendered, removing the long dashboard stack while retaining responsive behavior on narrow screens.
+
+The updated interface passed all 9 frontend unit tests, ESLint, Prettier, TypeScript, the Vite production build, and both Chromium end-to-end workflows. The Playwright configuration now accepts isolated API and web ports so automated verification can run without interrupting a manual acceptance session. Backend regression verification also passed all 19 tests, Ruff across application/tests/migrations, mypy across 59 source files, and `pip check`.
+
+Final acceptance remains pending until the owner rechecks the redesigned dashboard and completes the remaining workflow items in [phase-2-feedback.md](phase-2-feedback.md).
+
 ## Gate status
 
 All implementation and automated requirements pass. The Phase 2 release gate remains **pending external validation** because `tasks.md` requires at least one teammate to complete a real review workflow and provide feedback. The `phase-2-complete` tag must not be created until that feedback is recorded.

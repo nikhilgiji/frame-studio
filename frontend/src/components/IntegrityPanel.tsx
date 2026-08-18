@@ -10,8 +10,11 @@ export function IntegrityPanel({ projectId }: { projectId: number }) {
   });
   return (
     <details className="integrity-panel">
-      <summary>File integrity</summary>
-      <label>
+      <summary>
+        <span>File integrity</span>
+        <small>Verify videos, frames, and thumbnails</small>
+      </summary>
+      <label className="checkbox-row">
         <input
           type="checkbox"
           checked={repair}
