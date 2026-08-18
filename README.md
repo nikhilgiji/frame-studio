@@ -1,6 +1,6 @@
 # Vision Curator
 
-Vision Curator is a local web application for turning videos into curated computer-vision frame datasets. Phase 2 adds timeline navigation, server-side batch actions, configurable shortcuts, persistent review queues, statistics, unified job recovery, multi-step undo/redo, integrity repair, and a polished responsive interface to the complete Phase 1 curation workflow.
+Vision Curator is a local web application for turning videos into curated computer-vision frame datasets. Phase 2 adds timeline navigation, server-side batch actions, configurable shortcuts, persistent review queues, statistics, unified job recovery, multi-step undo/redo, integrity repair, and a guided responsive interface to the complete Phase 1 curation workflow. The default bright analytics theme uses a warm neutral canvas, white cards, high-contrast navigation, and distinct chart colors; dark mode remains available.
 
 ## Prerequisites
 
@@ -59,7 +59,7 @@ Open <http://localhost:3000>. The API health check is <http://localhost:8000/api
 1. Create a project from **Projects**. Each project gets an isolated directory under `storage/projects`.
 2. Open it and import one or more MP4, AVI, MOV, MKV, or WebM files. Folder selection skips unsupported files and reports corrupt media without stopping the rest of the batch.
 3. Start extraction for a video. Choose every N frames, frames per second, or every N seconds; select JPEG/PNG and optional resize limits. Jobs run outside the request thread and can be cancelled.
-4. Open the gallery. Results are paginated at no more than 200 frames and rows are virtualized, so the browser only renders nearby thumbnails.
+4. Follow the dashboard’s **Continue review** action, then use **Start with first unreviewed frame**. Press Space to mark a frame reviewed and Right Arrow for the next frame. Results are paginated at no more than 200 frames and rows are virtualized, so the browser only renders nearby thumbnails.
 5. Select with click, Ctrl/Cmd-click, or Shift-click. Create labels and apply them to one or many frames. Filter by video, labels, review state, favorite/rejected/unlabeled state, timestamp range, filename, or frame number.
 6. Double-click a thumbnail for the full-resolution viewer. Use the controls for fit/original size and zoom; zoomed content can be panned.
 7. Export selected, favorite, reviewed, or labeled frames, or create only a manifest. Choose duplicate handling and whether multi-label images are copied into every label folder.
@@ -121,7 +121,7 @@ npm run test:e2e
 npm audit
 ```
 
-The Playwright check starts both local servers and performs the complete workflow using a generated test video, then verifies timeline/queue navigation and responsive persisted settings. If Chromium is absent, install the test browser once with `npx playwright install chromium`. The 100,000-frame backend test is part of `pytest`; it asserts bounded 100-record responses, a sub-second filtered query, and use of the intended SQLite index. See the [Phase 2 verification report](docs/phase-2-verification.md).
+The Playwright check starts both local servers and performs the complete guided workflow using a generated test video, verifies timeline/queue navigation and responsive persisted settings, and checks every dashboard tab for horizontal overflow at desktop, tablet, and mobile sizes. If Chromium is absent, install the test browser once with `npx playwright install chromium`. The 100,000-frame backend test is part of `pytest`; it asserts bounded 100-record responses, a sub-second filtered query, and use of the intended SQLite index. See the [Phase 2 verification report](docs/phase-2-verification.md).
 
 ## Architecture and data safety
 
@@ -139,4 +139,4 @@ Original videos are never modified. Imports are copied into managed project stor
 - This is a single-user local product. Jobs run in the backend process rather than a distributed queue; terminating that process marks active jobs interrupted on restart so they can be retried.
 - Gallery navigation is page-bounded (up to 200 records at once); move between pages to traverse larger result sets.
 - Review queues store stable frame membership in SQLite. Very large queue creation therefore increases database size, although queue responses do not transfer all member IDs to the browser.
-- The `phase-2-complete` tag remains gated on a real teammate completing a workflow and recording feedback in [the feedback template](docs/phase-2-feedback.md).
+- Phase 2 owner acceptance and its no-teammate substitution are recorded in [the feedback report](docs/phase-2-feedback.md); the verified release is tagged `phase-2-complete`.

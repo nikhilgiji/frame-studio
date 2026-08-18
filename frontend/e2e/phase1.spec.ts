@@ -13,6 +13,7 @@ test("complete Phase 1 curation workflow persists", async ({ page }) => {
   await page.getByLabel("Description").fill("Playwright workflow");
   await page.getByRole("button", { name: "Create project" }).click();
   await page.getByRole("link", { name: projectName }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
   await page.getByRole("button", { name: /Labels/ }).click();
   await page.getByLabel("Label name").fill("Vehicle");

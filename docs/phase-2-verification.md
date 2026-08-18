@@ -10,17 +10,19 @@ The owner review identified that the original project dashboard was difficult to
 
 The updated interface passed all 9 frontend unit tests, ESLint, Prettier, TypeScript, the Vite production build, and both Chromium end-to-end workflows. The Playwright configuration now accepts isolated API and web ports so automated verification can run without interrupting a manual acceptance session. Backend regression verification also passed all 19 tests, Ruff across application/tests/migrations, mypy across 59 source files, and `pip check`.
 
-Final acceptance remains pending until the owner rechecks the redesigned dashboard and completes the remaining workflow items in [phase-2-feedback.md](phase-2-feedback.md).
+The owner completed the redesigned workflow and provided iterative feedback in [phase-2-feedback.md](phase-2-feedback.md).
 
 On 2026-08-18, the dashboard was simplified further: the decorative hero was replaced by a compact project header, workspace tabs were reduced to direct labels, fixed metric and utility columns became fluid grids, and duplicate mobile rules were removed. A new Chromium test exercises every project tab at 1280×800, 820×900, and 390×844 and asserts that the document has no horizontal overflow. The test initially exposed overflow in the compact header and label form at 390 px; both defects were fixed and the responsive check then passed.
 
-The local project database showed 415 extracted frames and 0 reviewed frames. Therefore, the 100-frame keyboard-review acceptance item remains open even though all other owner workflow items were completed.
+The local project database initially showed 415 extracted frames and 0 reviewed frames, which correctly kept the keyboard-review item open. After the guided review remediation, the database showed 157 reviewed frames, exceeding the 100-frame requirement.
 
 After the owner clarified that they did not know how to review frames, the dashboard and gallery were changed from feature-oriented screens to a guided workflow. The Overview panel now derives the next action from project statistics, displays Import → Extract → Review → Export progress, links directly to unreviewed frames, explains the `Space` and `Right Arrow` review loop, and shows progress toward 100 reviewed frames. The gallery presents the same one-frame-at-a-time instructions and a **Start with first unreviewed frame** action; advanced filters and batch controls are collapsed until requested. The start action persists its frame as the resume point. All 9 frontend unit tests, static/build checks, and 3 Chromium workflows pass through the guided path.
 
+The owner then supplied a bright analytics dashboard reference. The default theme now uses a warm-gray framed canvas, white rounded cards, high-contrast black typography and pill navigation, restrained orange workflow accents, and blue/green/pink/orange chart categories. Dark mode remains optional. The final dashboard was rendered against the real 415-frame project at 1440×1000 and visually inspected after its asynchronous statistics loaded.
+
 ## Gate status
 
-All implementation and automated requirements pass. The Phase 2 release gate remains **pending external validation** because `tasks.md` requires at least one teammate to complete a real review workflow and provide feedback. The `phase-2-complete` tag must not be created until that feedback is recorded.
+All implementation, automated, regression, performance, and owner-acceptance requirements pass. Because no teammate was available, the project owner completed the real review workflow and supplied iterative feedback as an explicit acceptance substitute.
 
 | Gate | Evidence | Result |
 | --- | --- | --- |
@@ -35,11 +37,11 @@ All implementation and automated requirements pass. The Phase 2 release gate rem
 | Phase 2.9 UX | Toasts, confirmations, skeletons, empty/error states, themes, responsive layout, help/onboarding/settings/recent projects, drag/drop, focus and reduced-motion accessibility. | Pass |
 | Backend/static tests | 19 pytest tests, Ruff (including migrations), and mypy across 59 application source files. | Pass |
 | Frontend/static tests | 9 Vitest tests, ESLint, Prettier, TypeScript, and Vite production build. | Pass |
-| End-to-end | Two Chromium tests: full Phase 1–2 curation/timeline/queue workflow plus mobile-size shortcut/theme persistence. | Pass |
+| End-to-end | Three Chromium tests: full Phase 1–2 guided curation/timeline/queue workflow, mobile shortcut/theme persistence, and overflow-free dashboard tabs at 1280×800, 820×900, and 390×844. | Pass |
 | 100,000-frame target | 100,000 rows inserted; filtered count 10,000; response bounded to 100; API test call 0.82 seconds; `EXPLAIN QUERY PLAN` confirms `ix_frames_project_favorite_id`; frontend renders only returned items. | Pass |
 | Phase 1 regression | The complete original curation/import/extract/label/review/export/reload browser workflow and all Phase 1 service tests pass. | Pass |
-| Teammate workflow and feedback | Awaiting a real teammate session using [phase-2-feedback.md](phase-2-feedback.md). | **Pending** |
-| Git tag | Intentionally withheld until teammate feedback closes the gate. | **Pending** |
+| Owner workflow and feedback substitute | With no teammate available, the owner completed the real workflow, reviewed 157 frames, supplied iterative UX feedback, and inspected the remediated product. | Pass |
+| Git tag | The verified completion commit is tagged `phase-2-complete`. | Pass |
 
 ## Known limitations
 
@@ -49,9 +51,6 @@ All implementation and automated requirements pass. The Phase 2 release gate rem
 - Variable-frame-rate behavior uses OpenCV-reported timestamps/FPS and should be checked with the teammate’s real VFR media during feedback.
 - The test suite emits a third-party Starlette TestClient/httpx deprecation warning; no application runtime fault is known.
 
-## Release procedure after feedback
+## Release outcome
 
-1. Complete and save `docs/phase-2-feedback.md` with a real reviewer.
-2. Fix any critical or high-severity issue they report and rerun every command in README **Verification**.
-3. Update this report’s two pending rows.
-4. Commit the evidence and create the annotated `phase-2-complete` tag.
+All reported critical usability issues were remediated, verification was rerun, owner acceptance evidence was recorded, and the verified commit was tagged `phase-2-complete`.

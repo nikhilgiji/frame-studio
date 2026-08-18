@@ -1561,3 +1561,302 @@ h2 {
     scroll-behavior: auto !important;
   }
 }
+
+/* Bright analytics theme: the default visual system. */
+:root[data-theme="light"] {
+  color: #171717;
+  background: #d1d0ce;
+  --surface-0: #f2f1ef;
+  --surface-1: #ffffff;
+  --surface-2: #faf9f7;
+  --surface-3: #eeedea;
+  --border: #e5e3df;
+  --border-strong: #d5d2cd;
+  --text: #171717;
+  --muted: #77736d;
+  --accent: #f59e0b;
+  --accent-strong: #d97706;
+  --danger: #c2413b;
+  --shadow: 0 14px 35px rgba(51, 45, 38, 0.08);
+}
+:root[data-theme="light"] body {
+  padding: clamp(12px, 3vw, 42px);
+  background: #d1d0ce;
+}
+:root[data-theme="light"] .app-shell {
+  max-width: 1440px;
+  min-height: calc(100vh - clamp(24px, 6vw, 84px));
+  padding: clamp(18px, 3vw, 34px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: clamp(18px, 3vw, 34px);
+  background: #f4f3f1;
+  box-shadow:
+    0 28px 80px rgba(43, 40, 36, 0.12),
+    inset 0 1px 0 #fff;
+}
+.app-header {
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+  align-items: center;
+  gap: 20px;
+}
+.app-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  font-size: 18px;
+  font-weight: 800;
+}
+.app-header nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+.app-header nav a {
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 650;
+}
+.app-header .local-badge {
+  justify-self: end;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--muted);
+  background: var(--surface-1);
+  font-size: 12px;
+}
+:root[data-theme="light"] .app-header {
+  padding-bottom: 34px;
+}
+:root[data-theme="light"] .app-header a {
+  color: #2c2a27;
+}
+:root[data-theme="light"] .app-header nav a:hover {
+  background: #ebe9e5;
+}
+:root[data-theme="light"] .app-header nav a.active {
+  background: #1d1d1f;
+  color: #fff;
+  box-shadow: 0 5px 10px rgba(20, 20, 20, 0.18);
+}
+:root[data-theme="light"] .brand-mark {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #ffb11b, #ec8d05);
+  color: #fff;
+  box-shadow: 0 5px 12px rgba(232, 139, 4, 0.25);
+  font-size: 12px;
+}
+:root[data-theme="light"] h2,
+:root[data-theme="light"] h3,
+:root[data-theme="light"] h4 {
+  color: #111;
+  letter-spacing: -0.025em;
+}
+:root[data-theme="light"] .eyebrow {
+  color: #d97706;
+}
+:root[data-theme="light"] button,
+:root[data-theme="light"] .button-link,
+:root[data-theme="light"] .file-button {
+  border-color: var(--border);
+  background: #f0efed;
+  color: #222;
+  box-shadow: 0 1px 2px rgba(45, 40, 35, 0.04);
+}
+:root[data-theme="light"] button:hover:not(:disabled),
+:root[data-theme="light"] .button-link:hover,
+:root[data-theme="light"] .file-button:hover {
+  border-color: #bbb7b1;
+  background: #e9e7e3;
+}
+:root[data-theme="light"] .button-link.primary,
+:root[data-theme="light"] .start-review,
+:root[data-theme="light"] .page-heading button,
+:root[data-theme="light"] .project-form button,
+:root[data-theme="light"] .import-controls button,
+:root[data-theme="light"] .video-list article > button:not(.danger) {
+  border-color: #1c1c1e;
+  background: #1c1c1e;
+  color: #fff;
+}
+:root[data-theme="light"]
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  border-color: var(--border);
+  background: #fff;
+  color: #171717;
+  box-shadow: inset 0 1px 1px rgba(40, 35, 30, 0.03);
+}
+:root[data-theme="light"] progress {
+  accent-color: #2563eb;
+}
+:root[data-theme="light"] .hero,
+:root[data-theme="light"] .foundation,
+:root[data-theme="light"] .form-card,
+:root[data-theme="light"] .project-card,
+:root[data-theme="light"] .empty-state,
+:root[data-theme="light"] .project-hero,
+:root[data-theme="light"] .dashboard-section,
+:root[data-theme="light"] .review-workflow,
+:root[data-theme="light"] .statistics-dashboard,
+:root[data-theme="light"] .job-history,
+:root[data-theme="light"] .integrity-panel,
+:root[data-theme="light"] .label-manager,
+:root[data-theme="light"] .video-import,
+:root[data-theme="light"] .video-list article,
+:root[data-theme="light"] .gallery-tools,
+:root[data-theme="light"] .bulk-tools,
+:root[data-theme="light"] .queue-panel,
+:root[data-theme="light"] .action-history {
+  border-color: var(--border);
+  background: #fff;
+  color: #171717;
+  box-shadow: var(--shadow);
+}
+:root[data-theme="light"] .project-hero,
+:root[data-theme="light"] .dashboard-section {
+  border-radius: 20px;
+}
+:root[data-theme="light"] .workspace-tabs {
+  border-color: var(--border);
+  background: #eae8e5;
+}
+:root[data-theme="light"] .workspace-tabs button {
+  color: #68645e;
+}
+:root[data-theme="light"] .workspace-tabs button.active {
+  border-color: #1c1c1e;
+  background: #1c1c1e;
+  color: #fff;
+  box-shadow: 0 5px 10px rgba(20, 20, 20, 0.15);
+}
+:root[data-theme="light"] .review-workflow > header {
+  border-bottom: 1px solid var(--border);
+}
+:root[data-theme="light"] .workflow-steps li,
+:root[data-theme="light"] .review-instructions,
+:root[data-theme="light"] .metric-grid div {
+  border-color: var(--border);
+  background: #fbfbfa;
+  box-shadow: none;
+}
+:root[data-theme="light"] .workflow-steps li.current {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+:root[data-theme="light"] .workflow-steps li.done > span {
+  border-color: #16a34a;
+  background: #16a34a;
+  color: #fff;
+}
+:root[data-theme="light"] .review-mode {
+  border-color: #fed7aa;
+  background: linear-gradient(120deg, #fff7ed, #fff 68%);
+  box-shadow: 0 10px 24px rgba(194, 102, 10, 0.07);
+}
+:root[data-theme="light"] .metric-grid div {
+  min-height: 96px;
+  border-radius: 14px;
+}
+:root[data-theme="light"] .metric-grid dt {
+  color: #8b8781;
+}
+:root[data-theme="light"] .metric-grid dd {
+  color: #111;
+  font-size: 28px;
+  font-weight: 500;
+}
+:root[data-theme="light"] .chart-grid section {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fbfbfa;
+}
+:root[data-theme="light"] .chart-grid section:nth-child(4n + 1) .chart-row i {
+  background: #2563eb;
+}
+:root[data-theme="light"] .chart-grid section:nth-child(4n + 2) .chart-row i {
+  background: #16a34a;
+}
+:root[data-theme="light"] .chart-grid section:nth-child(4n + 3) .chart-row i {
+  background: #ec4899;
+}
+:root[data-theme="light"] .chart-grid section:nth-child(4n + 4) .chart-row i {
+  background: #f59e0b;
+}
+:root[data-theme="light"] .chart-row {
+  color: #77736d;
+}
+:root[data-theme="light"] .chart-row b {
+  color: #171717;
+}
+:root[data-theme="light"] .gallery-scroll {
+  border-color: var(--border);
+  background: #e9e7e4;
+}
+:root[data-theme="light"] .frame-card {
+  background: #fff;
+  color: #262421;
+  box-shadow: 0 4px 12px rgba(48, 43, 37, 0.08);
+}
+:root[data-theme="light"] .frame-card.selected {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+:root[data-theme="light"] .frame-card small,
+:root[data-theme="light"] .video-name p,
+:root[data-theme="light"] .video-stat,
+:root[data-theme="light"] .section-heading > p,
+:root[data-theme="light"] .review-mode p,
+:root[data-theme="light"] .review-instructions p {
+  color: #7b7771;
+}
+:root[data-theme="light"] .export-panel {
+  border-color: var(--border);
+  background: #fff;
+  color: #171717;
+}
+:root[data-theme="light"] .toast,
+:root[data-theme="light"] .onboarding,
+:root[data-theme="light"] .shortcut-help {
+  border-color: var(--border);
+  background: #fff;
+  color: #171717;
+}
+
+@media (max-width: 760px) {
+  :root[data-theme="light"] body {
+    padding: 0;
+    background: #f4f3f1;
+  }
+  :root[data-theme="light"] .app-shell {
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .app-header {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+  .app-header nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: stretch;
+  }
+  .app-header nav a {
+    flex: 1;
+    text-align: center;
+  }
+  .app-header .local-badge {
+    display: none;
+  }
+}

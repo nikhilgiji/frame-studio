@@ -1,11 +1,11 @@
 import { useEffect, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 export function Layout({ children }: { children: ReactNode }) {
   useEffect(() => {
     const apply = () => {
       document.documentElement.dataset.theme =
-        localStorage.getItem("vision-curator:theme") ?? "dark";
+        localStorage.getItem("vision-curator:theme") ?? "light";
     };
     apply();
     window.addEventListener("vision-curator:theme", apply);
@@ -13,19 +13,23 @@ export function Layout({ children }: { children: ReactNode }) {
   }, []);
   return (
     <div className="app-shell">
-      <header>
-        <Link to="/" className="brand-mark">
-          VC
+      <header className="app-header">
+        <Link to="/" className="app-brand">
+          <span className="brand-mark">VC</span>
+          <span>Vision Curator</span>
         </Link>
-        <div>
-          <h1>Vision Curator</h1>
-          <p>Local video dataset workspace</p>
-        </div>
         <nav>
-          <Link to="/projects">Projects</Link>
-          {" · "}
-          <Link to="/settings">Settings</Link>
+          <NavLink exact to="/" activeClassName="active">
+            Home
+          </NavLink>
+          <NavLink to="/projects" activeClassName="active">
+            Projects
+          </NavLink>
+          <NavLink to="/settings" activeClassName="active">
+            Settings
+          </NavLink>
         </nav>
+        <span className="local-badge">Local workspace</span>
       </header>
       {children}
     </div>

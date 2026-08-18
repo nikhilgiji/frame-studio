@@ -74,7 +74,11 @@ export function ReviewWorkflow({
           <span>3</span>
           <div>
             <strong>Review</strong>
-            <small>{reviewed.toLocaleString()} of 100 reviewed</small>
+            <small>
+              {reviewComplete
+                ? `${reviewed.toLocaleString()} reviewed · goal complete`
+                : `${reviewed.toLocaleString()} of 100 reviewed`}
+            </small>
           </div>
           {framesReady && !reviewComplete && (
             <Link

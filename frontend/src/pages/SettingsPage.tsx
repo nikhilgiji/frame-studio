@@ -26,7 +26,7 @@ const labels: Record<ShortcutAction, string> = {
 
 export function SettingsPage() {
   const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("vision-curator:theme") !== "light",
+    () => localStorage.getItem("vision-curator:theme") === "dark",
   );
   const [values, setValues] = useState<ShortcutMap>(() => {
     try {
